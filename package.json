@@ -12,7 +12,7 @@
     "deploy:realtime": "wrangler deploy --config realtime/wrangler.jsonc",
     "test:realtime": "node tests/realtime-room.mjs && node tests/socket-client.mjs && node tests/http-capacity.mjs && node tests/inactivity.mjs && node tests/bot-fill.mjs",
     "test:renderers": "node tests/boat-model.mjs",
-    "test:multiplayer": "node tests/multiplayer-smoke.mjs && node tests/shared-wakes.mjs && node tests/bots.mjs && node tests/bot-driving.mjs && node tests/wake-prediction.mjs && node tests/peer-motion.mjs && node tests/boat-contacts.mjs && node tests/boat-bump-glide.mjs && node tests/tube-contacts.mjs && node tests/tube-tube-contacts.mjs && node tests/tube-impact-tuning.mjs",
+    "test:multiplayer": "node tests/multiplayer-smoke.mjs && node tests/shared-wakes.mjs && node tests/bots.mjs && node tests/bot-driving.mjs && node tests/bot-driving.mjs --fill && node tests/bot-maneuvers.mjs && node tests/wake-prediction.mjs && node tests/peer-motion.mjs && node tests/boat-contacts.mjs && node tests/boat-bump-glide.mjs && node tests/tube-contacts.mjs && node tests/tube-tube-contacts.mjs && node tests/tube-impact-tuning.mjs",
     "test": "node tests/physics-smoke.mjs && node tests/simulator-smoke.mjs && node tests/map-smoke.mjs && node tests/input-controls.mjs",
     "check": "pnpm run test && pnpm run build",
     "native:sync": "pnpm run build && cap sync",

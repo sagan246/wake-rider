@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { applyRoomAction, STALE_MS, MAX_PLAYERS } from '../multiplayer/room.js';
-import { BOT_ROUTE, MAX_BOTS } from '../multiplayer/bots.js';
+import { MAX_BOTS } from '../multiplayer/bots.js';
 import { SHARED_LAKE_RULES } from '../simulation/defaults.js';
 import { OSWEGO_MAP as lake, METERS_PER_UNIT as M } from '../maps/catalog.js';
 import { hasWaterClearance } from '../physics/shore.js';
@@ -38,21 +38,21 @@ assert.ok(moving.wakeEvents.length>0,'Bots produce canonical shared wakes');
 const water=[];const field=createSharedWakeField(water);field.receive(moving.wakeEvents,moving.serverTime);
 assert.ok(water.length>0,'Bot wakes enter the same physical wave field used by riders');
 
-// Follow both owners' boats for multiple laps: their hulls and tows stay inside the
+// Follow both owners' boats on varied journeys: their hulls and tows stay inside the
 // actual polygon, continue making progress, and do not outrun their rope.
 const visited=new Set();let minClear=true;
 for(let tick=1;tick<=6000;tick++){
   now+=200;moving=sync('human-a',3);
   if(tick%20===0)sync('human-b',3);
   for(const bot of bots()){
-    visited.add(bot.waypoint);
+    for(const region of Object.keys(bot.navigation?.visits||{}))visited.add(region);
     minClear&&=hasWaterClearance(lake,bot.boat.x,bot.boat.y,Math.hypot(bot.length,bot.beam)/2);
     minClear&&=hasWaterClearance(lake,bot.tube.x,bot.tube.y,1/M);
     assert.ok(Math.hypot(bot.tube.x-bot.boat.x,bot.tube.y-bot.boat.y)<40/M);
   }
 }
 assert.ok(minClear,'No hull or tube crosses land during 20 minutes of cruising');
-assert.equal(visited.size,BOT_ROUTE.length,'Bots complete the entire loop');
+assert.ok(visited.size>=4,'Bots reach multiple lake regions');
 const movingBot=bots()[0],human=room.players['human-a'];
 const contactOffset=movingBot.length*.75;
 human.boat={...movingBot.boat,x:movingBot.boat.x+Math.cos(movingBot.boat.angle)*contactOffset,y:movingBot.boat.y+Math.sin(movingBot.boat.angle)*contactOffset,vx:0,vy:0};human.tube={...human.boat,x:human.boat.x-24/M};human.graceUntil=0;
@@ -78,4 +78,4 @@ assert.equal(newcomer.players.filter(p=>p.isBot).length,MAX_BOTS-1,'A joining hu
 sync('new-human',999);assert.equal(bots().length,MAX_PLAYERS-2,'Multiple owners cannot exceed total lake capacity');
 action('new-human','leave');assert.equal(bots().length,MAX_BOTS,'Requested bots return when the human leaves');
 sync('fresh-human',-1);assert.equal(bots().length,0);
-console.log('Bot checks passed: shared visibility, default off, safe full laps, physical wakes, bumps, server clock, ownership, human priority and cleanup.');
+console.log('Bot checks passed: shared visibility, default off, safe exploration, physical wakes, bumps, server clock, ownership, human priority and cleanup.');

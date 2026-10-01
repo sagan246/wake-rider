@@ -94,9 +94,13 @@ Choose **PHYSICS → Lake map → Fill empty seats with bots** to keep the lake 
 when they join, and empty spaces refill when people leave. It stays on if the
 person who enabled it leaves, and switches off when the last human leaves.
 Turn it off to use **Your test bots** and request a manual count of 0–15 instead.
-Their starts are spread around the main basin, and they make alternating
-S-turns, sweeping turns and gentle speed changes for a livelier tube ride.
-They reduce weaving near traffic and shore. The 16-boat limit includes bots;
+Drivers have five styles—Cruiser, Explorer, Carver, Spinner and Wanderer—with
+individual speeds, weaving rhythms, destinations and spin timing. They explore
+safe routes through the western basin, coves and eastern arm. A few bots start
+in the separate northeastern bay instead of forcing its tight entrance.
+They anticipate other boats and their tows, yield and pass, and slow in narrow
+water. Full-circle spins happen only in clear water and stop if traffic approaches.
+Their wakes remain rideable. The 16-boat limit includes bots;
 real players always take their places when needed. New empty rooms start with bots off.
 
 This is casual multiplayer: local driving and tow physics are synchronized by

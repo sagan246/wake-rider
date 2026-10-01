@@ -81,6 +81,9 @@ These paths are ignored. The public Worker address is configuration, not a secre
 - The actor validates and atomically commits room actions. Invalid input never
   leaves a partially updated player behind. Messages and update rates are bounded.
 - Bots advance from an independent timer using their existing 100 ms step.
+  Their server-owned personalities, exploration routes, traffic yielding and
+  occasional spins are shared by every client. Route geometry is prevalidated;
+  path lookup is cached, and traffic prediction is bounded to the 16-boat fleet.
 - Unexpected disconnects retain reservations for 15 seconds. Reconnects resume
   the existing boat; expiry or an actor restart creates a fresh safe launch.
   Explicitly leaving removes the player and its manually requested bots.

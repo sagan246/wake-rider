@@ -3,6 +3,8 @@ import { hasWaterClearance, resolveShoreCollision } from '../physics/shore.js';
 import { SHARED_LAKE_RULES } from '../simulation/defaults.js';
 import { pruneWakeHistory, recordRoomWakes, recordWakeSamples, wakeSnapshot } from './wake-history.js';
 import { MAX_BOTS, BOT_STEP_MS, BOT_PADS, stepBot } from './bots.js';
+import { BAY_BOT_PADS } from './bot-routes.js';
+import { botPersonality } from './bot-personality.js';
 import { tubeContactResponse, tubeTubeContactResponse } from './tube-contacts.js';
 import { boatContactResponse } from './boat-contacts.js';
 import { startBoatBump } from '../physics/boat-bump.js';
@@ -141,8 +143,12 @@ function addBot(room,now,id,slot,ownerId=null){
   const used=new Set(Object.values(room.players).map(q=>q.color));
   const color=COLORS.find(c=>!used.has(c))||COLORS[0];
   const bot={id,isBot:true,fillBot:ownerId===null,ownerId,botSlot:slot,name:`Bot ${COLORS.indexOf(color)+1}`,color,physicsVersion:SHARED_LAKE_RULES.version,eventSeq:0};
+  bot.driverIndex=COLORS.indexOf(color);botPersonality(bot);
   configure(bot,{});
-  try{chooseSpawn(room.players,bot,now,BOT_PADS);}catch(error){if(error.status===409)return false;throw error;}
+  const fleet=Object.values(room.players).filter(p=>p.isBot);
+  const bayBoats=fleet.filter(p=>p.spawn.x>600/M&&p.spawn.y< -300/M).length;
+  const useBay=fleet.length>=4&&bayBoats<Math.floor((fleet.length+1)/5);
+  try{chooseSpawn(room.players,bot,now,useBay?[...BAY_BOT_PADS,...BOT_PADS]:BOT_PADS);}catch(error){if(error.status===409)return false;throw error;}
   room.players[id]=bot;return true;
 }
 function reconcileBots(room,now){

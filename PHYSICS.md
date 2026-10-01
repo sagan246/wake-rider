@@ -256,13 +256,28 @@ Shared Lake uses a hybrid client/server model:
 - [multiplayer/bots.js](multiplayer/bots.js) uses simplified server navigation
   and towing in 100 ms steps, driven by the room's independent timer. Bots share wakes
   and collision rules but do not run the complete human tow simulation.
-  Up to 15 bots use distributed starts around the main-basin loop. A 45 m steering
-  lookahead follows alternating 18–24 m offsets with independent 15–20 second
-  cycles, easing off near corners, other boats and shore. Cruise speed varies
-  gently within roughly 17–23 mph before turn/traffic reductions, independent
-  of bot slot number. Steering changes gradually and the driver slows when
-  its tube swings far sideways. Collision momentum and tow constraints remain
-  active; this navigation does not add the human rider's complete jump model.
+  Up to 15 bots use distributed starts, with three bay patrols in a full fleet.
+  [multiplayer/bot-routes.js](multiplayer/bot-routes.js) defines 35 surveyed nodes
+  and 41 water corridors with at least 30 m shore clearance. A disconnected
+  northeastern patrol avoids a neck too tight for reliable two-way towing.
+  [multiplayer/bot-navigation.js](multiplayer/bot-navigation.js) routes between
+  destinations, prioritizes unvisited regions, spreads incoming boats between
+  destinations, and scales lookahead, speed and weaving to corridor clearance.
+  A modest starboard lane separates opposing tows in narrow arms.
+  Knocked-off boats reconnect only along a
+  checked water segment; if none is visible they ease away from shore and retry.
+  Five seeded personalities vary cruising pace (roughly 16–24 mph before traffic
+  and turn reductions), weave amplitude/period, destination choice and spin timing.
+  Spins use the normal smoothed steering at 0.4 rad/s and 5.5 m/s, complete one
+  circle and return to the journey. They require over 90 m shore and 100 m tow
+  corridor clearance to start, and abort for nearby traffic, shore or a shove.
+  [multiplayer/bot-traffic.js](multiplayer/bot-traffic.js) predicts closest approach
+  up to four seconds ahead against moving boat/rope/tube corridors. Drivers use
+  a consistent passing side, briefly hold their decision, yield to crossing
+  traffic and do not brake in front of a faster boat approaching from behind.
+  These are steering aids, not collision immunity; existing physical contacts,
+  received momentum and tow constraints remain active. Bots still do not run
+  the human rider's complete jump model.
   Optional room-wide automatic filling keeps the total at 16 boats, with humans
   replacing filler bots. Manual bots remain owned by their requesting session;
   automatic fillers remain while any human is present and filling is enabled.
