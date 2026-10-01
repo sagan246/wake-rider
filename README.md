@@ -74,8 +74,8 @@ tab receives an independent temporary session, name and color. Players appear
 in the game and the lake chart. The transparent minimap defaults on and
 follows your boat in a north-up, 1 km-wide view. Colored edge arrows point to
 players outside that nearby view. Set a nickname or hide **Show player minimap
-while driving** in **PHYSICS → Lake map**; an explicit hidden preference is saved.
-The Physics map and **OPEN LAKE MAP** still show the entire lake.
+while driving** in **MENU → Lake map**; an explicit hidden preference is saved.
+The menu's map and **OPEN LAKE MAP** still show the entire lake.
 Launch and Reset reserve a shore-safe spot in the center of the main basin, checking the
 whole tow corridor against current boats and tubes. Boats exchange springy bumper-boat
 impulses, with server-owned acknowledgments to avoid duplicate impacts.
@@ -89,13 +89,13 @@ shared lake. Driving keys, held touch controls, gamepad input and UI interaction
 count as activity; a latched throttle, drifting or connection heartbeats do not.
 Press **Reset** to rejoin after inactivity. Solo Open Water has no idle timeout.
 
-The shared lake's Physics menu shows **your ping** to the game server, with
+The shared lake's Menu shows **your ping** to the game server, with
 Good (up to 100 ms), Fair (101–200 ms) or Poor (over 200 ms). This is a smoothed
 game-update round trip, including server processing; it is not a frame-rate
 measurement. Missing or stale readings show as unavailable/measuring, and the
 indicator is hidden in solo Open Water.
 
-Choose **PHYSICS → Lake map → Fill empty seats with bots** to keep the lake at
+Choose **MENU → Lake map → Fill empty seats with bots** to keep the lake at
 16 boats while people are playing. This is a shared setting: humans replace bots
 when they join, and empty spaces refill when people leave. It stays on if the
 person who enabled it leaves, and switches off when the last human leaves.
@@ -130,7 +130,7 @@ rules version, so older open tabs must refresh. This is a game-settings lock;
 the simulation remains client-side. Wake emissions are shared, including
 recent waves when a player joins; old wakes spread and fade after a boat leaves.
 
-Open **PHYSICS → Lake map** to select a location:
+Open **MENU → Lake map** (or **PHYSICS → Lake map** in solo Open Water) to select a location:
 
 - **Shared Lake** — The mapped shoreline, coves, lake arms,
   and five islands at real scale. Boats, tubes, and fallen riders collide with
@@ -138,7 +138,7 @@ Open **PHYSICS → Lake map** to select a location:
   a brief coast with stronger steering lets the driver turn clear. Tubes and
   fallen riders stay contained, and server pose checks do not reapply a bounce.
   The start is near the center of the main lake, heading
-  east-northeast into open water. A minimap in Physics tracks your position; **OPEN LAKE MAP** opens a larger chart
+  east-northeast into open water. A minimap in Menu tracks your position; **OPEN LAKE MAP** opens a larger chart
   and pauses the simulation while it is open.
 - **Open Water (original)** — the original endless water with no land or
   shoreline constraints.
@@ -148,7 +148,7 @@ map is remembered for this copy. Direct links: `/?map=oswego` and `/?map=open`.
 Reset and Restore Defaults keep the selected map.
 
 Every camera uses the original 2D style. Choose **HELM** (shortcut **5**) or
-**PHYSICS → Camera POV → Helm — Driver's eyes** for a forward view that uses
+**MENU → Camera POV → Helm — Driver's eyes** (**PHYSICS** in solo) for a forward view that uses
 the rear-view mirror's artwork, with a small translucent 2D bow. The Driver and Helm
 rear-view mirrors show shoreline and trees, using fixed tree positions and
 hiding far banks behind islands.

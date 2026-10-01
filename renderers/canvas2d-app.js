@@ -301,6 +301,9 @@ export function startCanvas2DApp() {
   },true);
   function syncPhysicsMode(){
     const locked=activeMap.id==='oswego';
+    document.querySelector('#physics-tools').textContent=locked?'MENU':'PHYSICS';
+    document.querySelector('#physics-panel-title').textContent=locked?'Menu':'Physics lab';
+    document.querySelector('#close-physics').setAttribute('aria-label',locked?'Close menu':'Close physics panel');
     for(const section of document.querySelectorAll('[data-physics-tuning]'))section.hidden=locked;
     for(const control of document.querySelectorAll('[data-physics-tuning] input, [data-physics-tuning] select'))control.disabled=locked;
     document.querySelector('.physics-note').hidden=locked;

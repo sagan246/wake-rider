@@ -32,7 +32,7 @@
           <button data-view="person" type="button">RIDER</button>
         </nav>
         <button id="reset" type="button">RESET</button>
-        <button id="physics-tools" type="button">PHYSICS</button>
+        <button id="physics-tools" type="button">MENU</button>
         <button id="help" type="button">?</button>
       </section>
     </header>
@@ -48,7 +48,7 @@
       <p>Shoreline, islands, and live players</p>
       <canvas id="lake-chart" width="1440" height="760" role="img" aria-label="Full lake map showing all players, your boat, tube, and launch location"></canvas>
       <div class="chart-legend"><span>➤ Colored boats = players</span><span><i class="tube-dot"></i>Tube</span><span>○ Main lake launch area</span></div>
-      <p class="note">Use Physics → Lake map to return to Open Water. Switching maps starts a fresh run. Shoreline follows OpenStreetMap; trees and buildings are decorative.</p>
+      <p class="note">Use Menu → Lake map to return to Open Water. Switching maps starts a fresh run. Shoreline follows OpenStreetMap; trees and buildings are decorative.</p>
       <a class="map-credit" href="licenses.html#map-data">Map © OpenStreetMap contributors · ODbL</a>
     </dialog>
     <aside class="wake-key"><i></i><span>Wake age: bright → faded</span></aside>
@@ -92,20 +92,20 @@
       <section class="about-card" aria-label="About Wake Rider Lab">
         <h2>About this app</h2>
         <p>The shared lake has room for up to 16 players. Each player has their own colored boat and tube. Everyone sees the same wakes: cross a friend’s wake to lift the boat or launch your tube. Open Water is solo. No account is needed.</p>
-        <p>The minimap starts on and follows your boat. Edge arrows point to farther players. Set your skipper name, hide the minimap, or open the whole-lake chart in Physics → Lake map. Reset finds a clear nearby launch spot. Boats bump each other. Shared wakes keep spreading and fading after a boat passes; your boat and tube react to those waves.</p>
+        <p>The minimap starts on and follows your boat. Edge arrows point to farther players. Set your skipper name, hide the minimap, or open the whole-lake chart in Menu → Lake map. Reset finds a clear nearby launch spot. Boats bump each other. Shared wakes keep spreading and fading after a boat passes; your boat and tube react to those waves.</p>
         <p class="note">The boat and rider are fictional. This remains an experimental game, not a real-world boating model.</p>
         <p class="about-links"><a href="privacy.html">Privacy policy</a> · <a href="support.html">Support</a> · <a href="licenses.html">Open-source licenses</a></p>
         <p class="note">Store URLs: boat.saganweb.com/privacy.html · boat.saganweb.com/support.html</p>
       </section>
     </dialog>
-    <dialog id="physics-panel">
+    <dialog id="physics-panel" aria-labelledby="physics-panel-title">
       <header class="physics-panel-header">
         <div>
           <span class="physics-kicker">LIVE TUNING</span>
-          <h1>Physics lab</h1>
+          <h1 id="physics-panel-title">Menu</h1>
           <p id="physics-panel-description">Adjust the boat, tow setup, rider, water, and camera while the simulation runs.</p>
         </div>
-        <button id="close-physics" aria-label="Close physics panel">×</button>
+        <button id="close-physics" aria-label="Close menu">×</button>
       </header>
       <p id="physics-mode-note" role="status">Shared lake · Physics are fixed at the defaults for every player. Switch to Open Water to tune them.</p>
       <div class="physics-sections">
