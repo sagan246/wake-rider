@@ -24,7 +24,7 @@ for(const bot of bots()){
 }
 const second=action('human-b','join');assert.equal(second.players.filter(p=>p.isBot).length,3,'Another player sees the same bots');
 assert.equal(second.self.activeBots,0);
-sync('human-b',3);assert.equal(bots().length,MAX_BOTS,'Requests from different players cannot exceed the lake limit');
+sync('human-b',3);assert.equal(bots().length,6,'Different players share the bots they request');
 const botId=bots()[0].id;
 assert.throws(()=>action(botId,'leave'),e=>e.status===403,'Clients cannot take over server boats');
 const initial={...bots()[0].boat};
@@ -38,7 +38,7 @@ assert.ok(moving.wakeEvents.length>0,'Bots produce canonical shared wakes');
 const water=[];const field=createSharedWakeField(water);field.receive(moving.wakeEvents,moving.serverTime);
 assert.ok(water.length>0,'Bot wakes enter the same physical wave field used by riders');
 
-// Follow three boats for multiple laps: their hulls and tows stay inside the
+// Follow both owners' boats for multiple laps: their hulls and tows stay inside the
 // actual polygon, continue making progress, and do not outrun their rope.
 const visited=new Set();let minClear=true;
 for(let tick=1;tick<=6000;tick++){
@@ -72,6 +72,10 @@ assert.equal(bots().length,0,'Real players take priority over every bot');
 action('guest-0','leave');assert.equal(bots().length,1,'A waiting request uses a free space');
 now+=STALE_MS+1;action('fresh-human','join');
 assert.equal(Object.keys(room.players).length,1,'Abandoned sessions never leave orphan bots');
-sync('fresh-human',999);assert.equal(bots().length,3,'Server bounds requested bot counts');
+sync('fresh-human',999);assert.equal(bots().length,MAX_BOTS,'One human can fill the lake with the bounded bot count');
+const newcomer=action('new-human','join');
+assert.equal(newcomer.players.filter(p=>p.isBot).length,MAX_BOTS-1,'A joining human replaces one of the 15 bots');
+sync('new-human',999);assert.equal(bots().length,MAX_PLAYERS-2,'Multiple owners cannot exceed total lake capacity');
+action('new-human','leave');assert.equal(bots().length,MAX_BOTS,'Requested bots return when the human leaves');
 sync('fresh-human',-1);assert.equal(bots().length,0);
 console.log('Bot checks passed: shared visibility, default off, safe full laps, physical wakes, bumps, server clock, ownership, human priority and cleanup.');

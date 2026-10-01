@@ -233,7 +233,7 @@ Shared Lake uses a hybrid client/server model:
 - [multiplayer/socket-client.js](multiplayer/socket-client.js) sends poses at a
   target 20 Hz over a persistent WebSocket. The room broadcasts at 20 Hz and
   immediately pushes human-update collision corrections to both owners.
-- [multiplayer/room.js](multiplayer/room.js) owns up to 12 reservations, shared
+- [multiplayer/room.js](multiplayer/room.js) owns up to 16 reservations, shared
   collision decisions, wake history and optional bots. [realtime/worker.js](realtime/worker.js)
   gives the lake one live Durable Object owner, with atomic in-memory actions.
   Motion does not require database reads/writes. HTTP compatibility clients
@@ -256,6 +256,13 @@ Shared Lake uses a hybrid client/server model:
 - [multiplayer/bots.js](multiplayer/bots.js) uses simplified server navigation
   and towing in 100 ms steps, driven by the room's independent timer. Bots share wakes
   and collision rules but do not run the complete human tow simulation.
+  Up to 15 bots use distributed starts around the main-basin loop. A 45 m steering
+  lookahead follows alternating 18–24 m offsets with independent 15–20 second
+  cycles, easing off near corners, other boats and shore. Cruise speed varies
+  gently within roughly 17–23 mph before turn/traffic reductions, independent
+  of bot slot number. Steering changes gradually and the driver slows when
+  its tube swings far sideways. Collision momentum and tow constraints remain
+  active; this navigation does not add the human rider's complete jump model.
 
 The actor keeps active play in memory. A server restart starts a new room epoch;
 clients clear wake/collision counters and relaunch safely. A reconnect within the

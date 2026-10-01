@@ -63,7 +63,7 @@ These paths are ignored. The public Worker address is configuration, not a secre
   The actor broadcasts snapshots at 20 Hz and pushes collision corrections.
 - Anonymous random session IDs plus ownership tokens reserve up to 16 boats.
   Tokens travel in message bodies over TLS, never in URLs or peer snapshots.
-- Up to three bots share that capacity and yield their slots to joining humans.
+- Up to 15 bots share that capacity and yield their slots to joining humans.
   A full human room returns `room_full`; clients keep the full notice visible
   while automatically retrying. There is no ordered waiting queue. A network
   failure replaces the notice, and the three-minute inactivity deadline still applies.

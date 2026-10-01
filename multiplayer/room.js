@@ -133,7 +133,7 @@ export function resolveTubeContacts(room,p,previousBoat,previousTube,now){
 const requestedBots=value=>Number.isSafeInteger(value)?clamp(value,0,MAX_BOTS):0;
 function reconcileBots(room,now){
   // Bots belong to the session that requested them, and never take a human's
-  // last seat. Bound the whole lake to three, even if many clients request them.
+  // last seat. Bound the whole lake to MAX_BOTS, even if many clients request them.
   for(const [id,bot] of Object.entries(room.players))if(bot.isBot){
     const owner=room.players[bot.ownerId];
     if(!owner||owner.isBot||bot.botSlot>owner.botCount)delete room.players[id];
