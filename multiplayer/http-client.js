@@ -9,9 +9,12 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
   let status='Solo · Open Water',self=null,peers=createPeerMotion(),count=0,botCount=0;
   let wakeCursor=0;
   let waitingForSpace=false;
+  let latency=null,latencyAt=0;
   function report(message){status=message;onStatus?.({message,ready,count,botCount,self});}
   function snapshot(data,started){
     const now=clock();
+    const sample=Math.max(0,now-started);
+    latency=latency===null||now-latencyAt>=2500?sample:latency*.8+sample*.2;latencyAt=now;
     peers.receive(data.players,{selfId:session.id,serverTime:data.serverTime,now,rtt:now-started});
     count=data.players.length;botCount=data.players.filter(p=>p.isBot).length;self=data.self;
   }
@@ -46,6 +49,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
       delay=Math.max(0,200-(clock()-started)); // 5 Hz start-to-start, one request in flight.
     }catch(error){
       if(run!==generation)return;
+      latency=null;
       if(error.code==='idle'){leave();report(IDLE_MESSAGE);onIdle?.();return;}
       ready=false;delay=1000;
       waitingForSpace=error.code==='room_full';
@@ -62,6 +66,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
     const old=session;
     generation++;clearTimeout(timer);abort?.abort();abort=null;session=null;joined=false;ready=false;peers.clear();count=0;botCount=0;self=null;wakeCursor=0;
     waitingForSpace=false;
+    latency=null;latencyAt=0;
     if(old)fetcher('/api/lake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...old,action:'leave'}),keepalive:true}).catch(()=>{});
   }
   function setMap(id){
@@ -75,5 +80,5 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
   function getPeers(){
     return peers.get(clock());
   }
-  return {setMap,leave,reset,getPeers,get self(){return self;},get ready(){return ready&&clock()-lastSuccess<3000;},get status(){return status;},get color(){return self?.color||COLORS_FALLBACK;}};
+  return {setMap,leave,reset,getPeers,get self(){return self;},get ready(){return ready&&clock()-lastSuccess<3000;},get latencyMs(){return ready&&clock()-lastSuccess<3000&&clock()-latencyAt<2500&&latency!==null?Math.round(latency):null;},get status(){return status;},get color(){return self?.color||COLORS_FALLBACK;}};
 }

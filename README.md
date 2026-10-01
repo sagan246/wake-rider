@@ -89,6 +89,12 @@ shared lake. Driving keys, held touch controls, gamepad input and UI interaction
 count as activity; a latched throttle, drifting or connection heartbeats do not.
 Press **Reset** to rejoin after inactivity. Solo Open Water has no idle timeout.
 
+The shared lake's Physics menu shows **your ping** to the game server, with
+Good (up to 100 ms), Fair (101–200 ms) or Poor (over 200 ms). This is a smoothed
+game-update round trip, including server processing; it is not a frame-rate
+measurement. Missing or stale readings show as unavailable/measuring, and the
+indicator is hidden in solo Open Water.
+
 Choose **PHYSICS → Lake map → Fill empty seats with bots** to keep the lake at
 16 boats while people are playing. This is a shared setting: humans replace bots
 when they join, and empty spaces refill when people leave. It stays on if the

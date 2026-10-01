@@ -89,6 +89,12 @@ These paths are ignored. The public Worker address is configuration, not a secre
   Explicitly leaving removes the player and its manually requested bots.
 - All HTTP compatibility traffic is forwarded to this same room, so old tabs
   and browsers without WebSockets do not end up in a separate lake.
+- The Physics menu displays each client's own smoothed update round-trip time.
+  WebSockets reuse validated, advancing timestamp echoes; HTTP uses request
+  duration. This includes processing and snapshot scheduling, not just network
+  travel. No additional ping requests are sent. The display refreshes once per
+  second, expires after 2.5 seconds without a fresh sample (or a stale connection),
+  clears on failure/reconnect, and is separate from capped prediction timing.
 - Open Water remains entirely solo. Rendering remains the existing 2.5D Canvas
   artwork. This is not full server simulation, rollback, or lag-free physics.
 

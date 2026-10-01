@@ -11,6 +11,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
   let session = null, socket = null, generation = 0, timer = null, reconnect = null;
   let joined = false, ready = false, self = null, status = 'Solo · Open Water';
   let seq = 0, ack = 0, frameAck = 0, wakeCursor = 0, epoch = null, lastSuccess = 0, lastEcho = -1, rtt = 0;
+  let latency = null, latencyAt = 0;
   let resetRevision = 0, resetWanted = false, pending = null, count = 0, botCount = 0, retry = 0;
   let waitingForSpace = false, closeMessage = null;
   function report(message) { status = message; onStatus?.({ message, ready, count, botCount, self }); }
@@ -28,6 +29,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
   function receive(data) {
     if (checkIdle()) return;
     if (data.type === 'error') {
+      latency = null; lastEcho = -1;
       if (data.code === 'idle') { leave(); report(IDLE_MESSAGE); onIdle?.(); return; }
       if (data.code === 'room_full') {
         // A rejected join also happens after an old reservation has expired.
@@ -57,8 +59,14 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
     } else if (!joined || pending || resetWanted) return;
     if (data.epoch !== epoch) { ready = false; socket?.close(); return; }
     waitingForSpace = false; closeMessage = null;
-    if (Number.isFinite(data.echo) && data.echo !== lastEcho) {
-      lastEcho = data.echo; rtt = Math.max(0, Math.min(1000, clock() - data.echo));
+    const receivedAt = clock();
+    if (Number.isFinite(data.echo) && data.echo > lastEcho && data.echo >= 0 && data.echo <= receivedAt) {
+      const sample = receivedAt - data.echo;
+      lastEcho = data.echo; rtt = Math.min(1000, sample);
+      // Display actual game-update round trips, independently of prediction's
+      // capped RTT. Repeated echoes must not make an old reading look fresh.
+      latency = latency === null || receivedAt - latencyAt >= 2500 ? sample : latency * .8 + sample * .2;
+      latencyAt = receivedAt;
     }
     peers.receive(data.players, { selfId: session.id, serverTime: data.serverTime, now: clock(), rtt });
     self = data.self; count = data.players.length; botCount = data.players.filter(player => player.isBot).length;
@@ -71,6 +79,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
   }
   function connect(run) {
     if (run !== generation || !session || checkIdle()) return;
+    latency = null; lastEcho = -1;
     // Keep the last full notice visible while this attempt connects. A new
     // network failure must still be reported as a connection problem.
     closeMessage = null;
@@ -103,6 +112,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
       if (!valid()) return;
       if (event.code === IDLE_CLOSE_CODE) { leave(); report(IDLE_MESSAGE); onIdle?.(); return; }
       cancel(timer); pending = null; ready = false; socket = null;
+      latency = null;
       if (!closeMessage) waitingForSpace = false;
       report(closeMessage || 'Connection interrupted · reconnecting…');
       reconnect = schedule(() => connect(run), Math.min(3000, 250 * 2 ** Math.min(retry++, 4)));
@@ -115,6 +125,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
     generation++; cancel(timer); cancel(reconnect);
     socket?.close(); socket = null; session = null; pending = null; joined = false; ready = false;
     peers.clear(); self = null; count = 0; botCount = 0;
+    latency = null; latencyAt = 0; lastEcho = -1;
     waitingForSpace = false; closeMessage = null;
   }
   function setMap(id) {
@@ -129,6 +140,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
     reset() { if (session && !waitingForSpace) { resetRevision++; resetWanted = true; ready = false; report('Finding a clear starting spot…'); } },
     getPeers: () => peers.get(clock()),
     get self() { return self; }, get status() { return status; }, get color() { return self?.color || '#62dcff'; },
+    get latencyMs() { return ready && clock() - lastSuccess < 1500 && clock() - latencyAt < 2500 && latency !== null ? Math.round(latency) : null; },
     get ready() { return ready && clock() - lastSuccess < 1500; }
   };
 }

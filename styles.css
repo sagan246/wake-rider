@@ -194,6 +194,10 @@ dialog dd { margin: 3px 0 0; font-weight: 700; }
 #online-notice { position:absolute; z-index:6; top:210px; left:50%; transform:translateX(-50%); max-width:calc(100% - 40px); padding:10px 15px; border:1px solid #94cdb866; border-radius:10px; color:#e5eedc; background:#082f3be8; font:12px system-ui; text-align:center; pointer-events:none; }
 #online-notice[hidden],#player-minimap-wrap[hidden],#shared-lake-settings[hidden],#manual-bots-control[hidden] { display:none; }
 #online-status { color:#8ee2d2; font-size:13px; margin:0 0 14px; }
+#connection-ping { margin:-6px 0 14px; color:#aac3be; font-size:12px; font-variant-numeric:tabular-nums; }
+#connection-ping[data-quality="good"] { color:#8ee2d2; }
+#connection-ping[data-quality="fair"] { color:#f0ce86; }
+#connection-ping[data-quality="poor"] { color:#ffa89e; }
 #player-name { display:block; box-sizing:border-box; width:100%; padding:10px; margin:8px 0 14px; color:#ebedda; background:#0b3540; border:1px solid #749c9b66; border-radius:7px; font:14px system-ui; }
 .player-map-option { display:flex!important; align-items:center; gap:9px; margin:12px 0; font-size:13px; }
 .player-map-option input { width:18px; height:18px; accent-color:#e5c276; }

@@ -66,6 +66,7 @@ export function createLakeClient(options) {
     getPeers: () => active?.getPeers() || [],
     get self() { return active?.self || null; },
     get ready() { return active?.ready || false; },
+    get latencyMs() { return active?.latencyMs ?? null; },
     get status() { return active?.status || status; },
     get color() { return active?.color || '#62dcff'; }
   };

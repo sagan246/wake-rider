@@ -118,6 +118,16 @@ export function startCanvas2DApp() {
   const miniMap=document.querySelector('#mini-map'),lakeChart=document.querySelector('#lake-chart');
   const hudMap=document.querySelector('#player-minimap'),hudMapWrap=document.querySelector('#player-minimap-wrap'),mapToggle=document.querySelector('#show-player-minimap');
   const playerName=document.querySelector('#player-name'),onlineStatus=document.querySelector('#online-status'),onlineNotice=document.querySelector('#online-notice');
+  const connectionPing=document.querySelector('#connection-ping');
+  let nextPingUiAt=0;
+  function updatePingUi(){
+    const ping=multiplayer?.latencyMs??null;
+    const quality=ping===null?'unknown':ping<=100?'good':ping<=200?'fair':'poor';
+    connectionPing.dataset.quality=quality;
+    connectionPing.textContent=ping===null
+      ?`Ping: ${multiplayer?.ready?'measuring…':'unavailable'}`
+      :`Ping: ${ping} ms · ${quality[0].toUpperCase()+quality.slice(1)}`;
+  }
   const testBots=document.querySelector('#test-bots'),testBotsStatus=document.querySelector('#test-bots-status');
   const fillEmptySeats=document.querySelector('#fill-empty-seats'),fillBotsStatus=document.querySelector('#fill-bots-status');
   const botFillHelp='Shared setting · keeps 16 boats on the lake while people are playing. Real players replace bots as they join.';
@@ -154,7 +164,7 @@ export function startCanvas2DApp() {
     onStatus:({message,ready,count,self})=>{
       onlineStatus.textContent=message;onlineNotice.textContent=message;
       onlineNotice.hidden=activeMap.id!=='oswego'||ready;
-      if(!ready){controls.resetAll();setCruiseEnabled(false);}
+      if(!ready){controls.resetAll();setCruiseEnabled(false);updatePingUi();nextPingUiAt=0;}
       if(self?.botFill){
         botFillState=self.botFill;
         if(pendingBotFill&&(botFillState.epoch!==pendingBotFill.epoch||botFillState.revision!==pendingBotFill.revision))pendingBotFill=null;
@@ -830,6 +840,7 @@ export function startCanvas2DApp() {
   }
   function frame(now){
     if(appSuspended){last=now;accumulator=0;requestAnimationFrame(frame);return;}
+    if(physicsPanel.open&&activeMap.id==='oswego'&&now>=nextPingUiAt){updatePingUi();nextPingUiAt=now+1000;}
     let elapsed=Math.min((now-last)/1000,.05);last=now;accumulator+=elapsed;
     if(mapDialog.open)accumulator=0;
     while(accumulator>=1/120){update(1/120);accumulator-=1/120;}
