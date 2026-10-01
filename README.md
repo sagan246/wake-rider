@@ -76,7 +76,7 @@ follows your boat in a north-up, 1 km-wide view. Colored edge arrows point to
 players outside that nearby view. Set a nickname or hide **Show player minimap
 while driving** in **PHYSICS → Lake map**; an explicit hidden preference is saved.
 The Physics map and **OPEN LAKE MAP** still show the entire lake.
-Launch and Reset reserve a shore-safe spot near the west start, checking the
+Launch and Reset reserve a shore-safe spot in the center of the main basin, checking the
 whole tow corridor against current boats and tubes. Boats exchange springy bumper-boat
 impulses, with server-owned acknowledgments to avoid duplicate impacts.
 After a bump, boats glide briefly before their normal sideways resistance or
@@ -117,7 +117,7 @@ Open **PHYSICS → Lake map** to select a location:
   the shoreline. Boat impacts rebound softly and retain motion along the bank;
   a brief coast with stronger steering lets the driver turn clear. Tubes and
   fallen riders stay contained, and server pose checks do not reapply a bounce.
-  The start is near the west end of the main lake, heading
+  The start is near the center of the main lake, heading
   east-northeast into open water. A minimap in Physics tracks your position; **OPEN LAKE MAP** opens a larger chart
   and pauses the simulation while it is open.
 - **Open Water (original)** — the original endless water with no land or

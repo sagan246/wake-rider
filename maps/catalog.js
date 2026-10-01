@@ -14,7 +14,8 @@ export const OSWEGO_MAP = Object.freeze({
   id: 'oswego', name: 'Shared Lake', description: 'Shoreline & islands · multiplayer',
   rings: [ring(data.outer), ...data.holes.map(ring)],
   bounds: Object.fromEntries(Object.entries(data.boundsMeters).map(([key, value]) => [key, toUnits(value)])),
-  spawn: { x: toUnits(-2900), y: toUnits(810), angle: -20 * Math.PI / 180 },
+  // Open water in the main basin, with room for the shared launch grid.
+  spawn: { x: toUnits(-1500), y: toUnits(330), angle: -20 * Math.PI / 180 },
   source: data.source, attribution: data.attribution
 });
 export const MAPS = Object.freeze({ oswego: OSWEGO_MAP, open: OPEN_MAP });

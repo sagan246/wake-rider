@@ -17,7 +17,11 @@ const sync=(id,botCount,at=now)=>{
 action('human-a','join');assert.equal(bots().length,0,'Bots default off');
 sync('human-a',3);assert.equal(bots().length,3);
 assert.equal(new Set(Object.values(room.players).map(p=>p.color)).size,4);
-for(const bot of bots())assert.ok(Math.hypot(bot.boat.x-room.players['human-a'].boat.x,bot.boat.y-room.players['human-a'].boat.y)*M>50,'Bots launch nearby without occupying the human launch');
+for(const bot of bots()){
+  const distance=Math.hypot(bot.boat.x-room.players['human-a'].boat.x,bot.boat.y-room.players['human-a'].boat.y)*M;
+  assert.ok(distance>50,'Bots leave room around the human launch');
+  assert.ok(distance<500,'Bots start nearby in the same main basin');
+}
 const second=action('human-b','join');assert.equal(second.players.filter(p=>p.isBot).length,3,'Another player sees the same bots');
 assert.equal(second.self.activeBots,0);
 sync('human-b',3);assert.equal(bots().length,MAX_BOTS,'Requests from different players cannot exceed the lake limit');

@@ -49,8 +49,9 @@ That is northwest of the geographic origin. The polygon itself is holes[1].
 Geometry represents mapped water extent only. Buildings, trees, docks, roads, and gameplay obstacles added by the game are stylized unless sourced separately.
 
 GAME EDITION START POSITION
-The game catalog places the actual boat at [-2900,810] meters relative to the
-geographic origin, near the west end of the main lake and south of the western
-island. It heads -20 degrees in canvas coordinates (compass 70 degrees,
-east-northeast) into open water. Its simplified-shore clearance is 44.59 meters;
-the tube on a 100ft tow line has 40.43 meters of shore clearance at reset.
+The game catalog places the launch center at [-1500,330] meters relative to the
+geographic origin, in the open middle of the main lake. Boats head -20 degrees
+in canvas coordinates (compass 70 degrees, east-northeast). The launch center
+has 178.28 meters of clearance from the simplified shoreline. The multiplayer
+server chooses spaced positions around it and checks each complete tow corridor
+against land, current boats, tubes, and predicted boat movement.

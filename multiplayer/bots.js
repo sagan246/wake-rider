@@ -4,11 +4,11 @@ import { stepBoatBump } from '../physics/boat-bump.js';
 
 export const MAX_BOTS = 3;
 export const BOT_STEP_MS = 100;
-// A loop in the western basin; even the narrowest leg has 47 m of shore
-// clearance. Keeping the routes nearby makes finding and following a wake easy.
+// A loop around the main-basin launch, with at least 76 m of shoreline
+// clearance along its legs. Nearby routes make finding and following wakes easy.
 export const BOT_ROUTE = [
-  [-2820,720],[-2670,640],[-2440,530],[-2150,440],[-1900,420],
-  [-1810,460],[-1870,550],[-2100,640],[-2400,720],[-2650,755],[-2790,760]
+  [-1830,420],[-1740,350],[-1600,250],[-1450,220],[-1300,230],
+  [-1210,280],[-1300,370],[-1430,440],[-1570,425],[-1710,470],[-1830,500]
 ].map(([x,y])=>({x:x/M,y:y/M}));
 export const BOT_PADS = Array.from({length:9},(_,i)=>{
   const leg=i<4?0:1,t=i<4?i/4:(i-4)/5,a=BOT_ROUTE[leg],b=BOT_ROUTE[leg+1];

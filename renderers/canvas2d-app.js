@@ -46,6 +46,7 @@ export function startCanvas2DApp() {
   const controls=createInputController({onReset:reset,onView:setView});
   const activity=createActivityTracker();
   let multiplayer=null,remotePlayers=[],soloPhysics=null;
+  let lakeSpawnAssigned=false;
 
   function syncSimulationState(state=simulator.getState()){
     ({boat,tube,wakes,ropeChain,traces,replay,simTime,peaks}=state);
@@ -122,13 +123,24 @@ export function startCanvas2DApp() {
   testBots.addEventListener('change',()=>{testBotsStatus.textContent='Updating your bots…';});
   mapToggle.checked=true;
   try{mapToggle.checked=localStorage.getItem('wake-rider-player-minimap')!=='false';playerName.value=localStorage.getItem('wake-rider-player-name')||'';}catch{}
-  const updateMinimapVisibility=()=>{hudMapWrap.hidden=activeMap.id!=='oswego'||!mapToggle.checked;};
+  const updateMinimapVisibility=()=>{
+    const waitingForLaunch=activeMap.id==='oswego'&&!lakeSpawnAssigned;
+    hudMapWrap.hidden=activeMap.id!=='oswego'||waitingForLaunch||!mapToggle.checked;
+    miniMap.hidden=activeMap.id==='open'||waitingForLaunch;
+    document.querySelector('#show-map').disabled=waitingForLaunch;
+  };
   mapToggle.addEventListener('change',()=>{updateMinimapVisibility();try{localStorage.setItem('wake-rider-player-minimap',String(mapToggle.checked));}catch{}});
   playerName.addEventListener('change',()=>{try{localStorage.setItem('wake-rider-player-name',playerName.value);}catch{}});
   multiplayer=createLakeClient({
     read:()=>({boat,tube,wakeSamples:simulator.getWakeSamples(),name:playerName.value,botCount:Number(testBots.value),paused:appSuspended||mapDialog.open||replay.active,
       activitySeq:activity.sample(controls.hasHeldInput(),appSuspended||mapDialog.open||replay.active)}),
-    onSpawn:spawn=>reset(spawn),
+    onSpawn:spawn=>{
+      reset(spawn);
+      // Install the assigned boat and camera before revealing the lake. The
+      // local map default is provisional and may differ from a free server pad.
+      lakeSpawnAssigned=true;
+      updateMinimapVisibility();
+    },
     onCorrection:event=>{simulator.applyNetworkCorrection(event);syncSimulationState();},
     onWakes:(events,time,receipt)=>simulator.receiveSharedWakes(events,time,receipt),
     onStatus:({message,ready,count,self})=>{
@@ -161,6 +173,7 @@ export function startCanvas2DApp() {
     testBots.value='0';testBotsStatus.textContent='Your bots are off.';
     if(activeMap.id==='open')soloPhysics={config:{...CONFIG},rider:{...rider},riderProfile:riderProfileControl.value,maxBoatSpeedMph,cruiseSpeedMph};
     activeMap=getMap(mapSelect.value);mapOverlay=createMapOverlay(activeMap);
+    lakeSpawnAssigned=false;
     multiplayer.leave();controls.resetAll();setCruiseEnabled(false);
     if(activeMap.id==='oswego')restorePhysicsDefaults();
     else if(soloPhysics){
@@ -774,6 +787,11 @@ export function startCanvas2DApp() {
     drawLake();drawWakes();if(debug)drawTrace();mapOverlay.drawTerrain(ctx,screen,w,h);drawPlayers2D(ctx,screen,remotePlayers,w,h);drawBoat();drawTow();drawTube();drawFallenRider();drawDebug();drawReplay();drawPerspectiveView();
   }
   function draw(){
+    if(activeMap.id==='oswego'&&!lakeSpawnAssigned){
+      // Keep the existing connection notice and controls, without briefly
+      // drawing the old launch, boat, mirror, or minimap beneath them.
+      ctx.fillStyle='#123f56';ctx.fillRect(0,0,w,h);return;
+    }
     boatStyle=activeMap.id==='oswego'?boatColorStyle(multiplayer.color):activeBoatProfile.style;
     remotePlayers=activeMap.id==='oswego'?multiplayer.getPeers():[];
     draw2d();

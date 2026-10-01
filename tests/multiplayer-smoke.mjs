@@ -26,6 +26,13 @@ assert.ok(joined.every(r=>r.status===200),'Concurrent joins succeed without lost
 const latest=await join(sessions[0]);assert.equal(latest.data.players.length,MAX_PLAYERS);
 assert.equal(new Set(latest.data.players.map(p=>`${p.boat.x},${p.boat.y}`)).size,12);
 for(const p of latest.data.players){assert.ok(hasWaterClearance(lake,p.boat.x,p.boat.y,5/M));assert.ok(hasWaterClearance(lake,p.tube.x,p.tube.y,3/M));}
+for(const p of latest.data.players){
+  assert.ok(Math.hypot(p.boat.x-lake.spawn.x,p.boat.y-lake.spawn.y)<85/M,'All 12 players start together in the main basin');
+  for(let t=0;t<=1;t+=.05){
+    assert.ok(hasWaterClearance(lake,p.boat.x+(p.tube.x-p.boat.x)*t,p.boat.y+(p.tube.y-p.boat.y)*t,100/M),
+      'The new launch keeps each full tow corridor well away from the banks');
+  }
+}
 for(const a of latest.data.players)for(const b of latest.data.players)if(a.id!==b.id)assert.ok(Math.hypot(a.boat.x-b.boat.x,a.boat.y-b.boat.y)>10/M);
 assert.equal((await join(sessions[12])).status,409,'Room capacity is enforced');
 assert.equal((await post({...sessions[0],token:sessions[1].token,action:'sync',seq:1})).status,403);
@@ -38,6 +45,12 @@ assert.equal((await join(sessions[12])).status,200);
 const reset=await post({...sessions[0],action:'reset',seq:3,length:1,beam:99999,ropeLength:99999});
 assert.equal(reset.status,200);
 const fixedBoat=reset.data.players.find(p=>p.id===sessions[0].id);
+// Already-open browsers still know the old map default. The server-assigned
+// spawn must override it without requiring a new frontend or physics version.
+const oldMapClient=createSimulator({map:{...lake,spawn:{x:-2900/M,y:810/M,angle:lake.spawn.angle}}});
+oldMapClient.reset(reset.data.self.spawn);
+assert.equal(oldMapClient.getState().boat.x,fixedBoat.boat.x);
+assert.equal(oldMapClient.getState().boat.y,fixedBoat.boat.y);
 assert.equal(fixedBoat.length,SHARED_LAKE_RULES.length,'Shared hull length ignores solo/client tuning');
 assert.equal(fixedBoat.beam,SHARED_LAKE_RULES.beam,'Shared beam stays at the default');
 const resetAgain=await post({...sessions[0],action:'reset',seq:3});assert.deepEqual(resetAgain.data.self.spawn,reset.data.self.spawn,'Reset retry is idempotent');
