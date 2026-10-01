@@ -142,6 +142,9 @@ export function createMapOverlay(map) {
     const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
     const pad = detailed ? 75 : 24, b = map.bounds;
     const nearby = followBoat && !detailed;
+    // The HUD canvas is scaled down from 460 pixels to 145 pixels on phones.
+    // Size its markers in displayed pixels so they stay readable on every screen.
+    const markerScale = nearby ? w / (canvas.clientWidth || w) : 1;
     const scale = nearby ? w / (1000 / METERS_PER_UNIT)
       : Math.min((w - pad * 2) / (b.maxX - b.minX), (h - pad * 2) / (b.maxY - b.minY));
     const midX = nearby ? boat.x : (b.minX + b.maxX) / 2;
@@ -162,24 +165,26 @@ export function createMapOverlay(map) {
     ctx.restore();
     const p = project(boat.x, boat.y), home = project(map.spawn.x, map.spawn.y);
     for(const player of players){
-      const q=project(player.boat.x,player.boat.y),r=detailed?7:nearby?5:4;
+      const q=project(player.boat.x,player.boat.y),r=nearby?3*markerScale:detailed?7:4;
       const dx=q.x-w/2,dy=q.y-h/2;
-      const edgeRatio=nearby?Math.min(1,(w/2-18)/Math.abs(dx),(h/2-32)/Math.abs(dy)):1;
+      const edgeX=Math.max(0,w/2-10*markerScale),edgeY=Math.max(0,h/2-13*markerScale);
+      const edgeRatio=nearby?Math.min(1,dx?edgeX/Math.abs(dx):1,dy?edgeY/Math.abs(dy):1):1;
       const atEdge=edgeRatio<1;
       ctx.save();ctx.translate(atEdge?w/2+dx*edgeRatio:q.x,atEdge?h/2+dy*edgeRatio:q.y);
+      ctx.lineJoin='round';ctx.lineCap='round';
       ctx.rotate(atEdge?Math.atan2(dy,dx):player.boat.angle);
       if(atEdge){
         ctx.beginPath();ctx.moveTo(-r,-r);ctx.lineTo(r*1.3,0);ctx.lineTo(-r,r);
-        ctx.strokeStyle='#092f39';ctx.lineWidth=5;ctx.stroke();
-        ctx.strokeStyle=player.color;ctx.lineWidth=2.5;ctx.stroke();
+        ctx.strokeStyle='#092f39';ctx.lineWidth=2.5*markerScale;ctx.stroke();
+        ctx.strokeStyle=player.color;ctx.lineWidth=1.2*markerScale;ctx.stroke();
       }else{
         ctx.beginPath();ctx.moveTo(r*1.5,0);ctx.lineTo(-r,-r*.7);ctx.lineTo(-r,r*.7);ctx.closePath();
-        ctx.fillStyle=player.color;ctx.strokeStyle='#092f39';ctx.lineWidth=1.5;ctx.fill();ctx.stroke();
+        ctx.fillStyle=player.color;ctx.strokeStyle='#092f39';ctx.lineWidth=nearby?.8*markerScale:1.5;ctx.fill();ctx.stroke();
       }
       ctx.restore();
       if(detailed){ctx.font='15px system-ui';ctx.fillStyle=player.color;ctx.textAlign='center';ctx.fillText(player.name,q.x,q.y-13);ctx.textAlign='left';}
     }
-    const r = detailed ? 10 : 6;
+    const r = nearby ? 3*markerScale : detailed ? 10 : 6;
     // Keep both minimaps focused on boats; the full chart retains the tow.
     if(detailed){
       const t=project(tube.x,tube.y);
@@ -188,8 +193,10 @@ export function createMapOverlay(map) {
     }
     if(!nearby){ctx.strokeStyle = '#f7f3d2'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(home.x, home.y, r * 1.8, 0, Math.PI * 2); ctx.stroke();}
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(boat.angle);
+    ctx.lineJoin='round';
     ctx.beginPath(); ctx.moveTo(r * 1.8, 0); ctx.lineTo(-r, -r); ctx.lineTo(-r * .6, 0); ctx.lineTo(-r, r); ctx.closePath();
-    ctx.fillStyle = ownColor; ctx.strokeStyle = '#0c383e'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=ownColor;ctx.strokeStyle='#0c383e';ctx.lineWidth=nearby?.8*markerScale:2;ctx.fill();ctx.stroke();
+    ctx.restore();
     ctx.fillStyle = '#d6e8d7'; ctx.textAlign = 'left'; ctx.font = `${detailed ? 23 : 17}px system-ui`;
     ctx.fillText('N ↑', w - (detailed ? 80 : 51), detailed ? 40 : 25);
     if (detailed) {
