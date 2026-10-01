@@ -1,0 +1,56 @@
+SHORELINE SOURCE DATA
+
+Downloaded 2026-09-30 from the OpenStreetMap public API:
+https://www.openstreetmap.org/api/0.6/relation/4046990/full.json
+Feature page: https://www.openstreetmap.org/relation/4046990
+Relation version 15, relation timestamp 2026-04-03T20:04:26Z.
+
+Attribution: © OpenStreetMap contributors
+Database/data license: Open Database License (ODbL) 1.0
+https://opendatacommons.org/licenses/odbl/1-0/
+https://www.openstreetmap.org/copyright
+Display an attribution link in the game, e.g. "Lake map © OpenStreetMap contributors" linking to the copyright page.
+These geographic data and their derivatives are distributed under ODbL 1.0. This notice concerns the map data; it does not assert the game software is ODbL.
+
+FILES
+oswego-lake-osm-source.json: unchanged OSM API response, 1,712 nodes, 23 ways, one relation.
+oswego-lake.geojson: assembled full-precision WGS84 Polygon, outer ring plus five island holes, [longitude, latitude].
+oswego-lake-meters.json: simplified browser-ready geometry and metadata.
+oswego-lake-meters.js: the same object exported as OSWEGO_LAKE_METERS, for convenient ES-module import.
+derive_shoreline.py: reproducible stdlib-only assembly, local projection, simplification, and export.
+shoreline-preview.svg: vector overview of full shoreline. North is up.
+
+LOCAL COORDINATES
+All polygon vertices are [x east in meters, y south in meters].
+Origin is longitude -122.6795, latitude 45.412, in the eastern main lake.
+Projection uses x=(longitude - originLongitude) * 111320*cos(45.410 degrees), y=(originLatitude - latitude) * 111320.
+This intentionally compact local equirectangular projection preserves the recognizable lake shape and is appropriate for this game footprint, not precision surveying.
+All rings are closed (first point repeats as last).
+Outer ring simplified with Douglas-Peucker tolerance 5m, 433 vertices including closure. Five source vertices were restored in a narrow cove to prevent simplification-induced crossings; final rounded geometry has zero ring self-intersections or cross-ring intersections.
+Island holes simplified at tolerance 2m: 7, 21, 8, 6, 6 vertices including closures.
+Lake extents, meters from origin: x [-3405.47, 1231.17], y [-627.96, 1485.87].
+Overall footprint approximately 4.637km east-west by 2.114km north-south, including narrow arms.
+
+GAME SPAWN SUGGESTION
+Origin [0,0] is verified inside the lake and outside islands.
+Clearance to original shoreline/island boundaries: 50.62m; simplified geometry clearance: 53.33m.
+Nearest shore is southwest: relative shore point [-37.72,33.76], compass bearing 228.17 degrees (clockwise from north).
+Suggested initial compass heading 138 degrees (southeast) is approximately parallel to the nearby south shore; a trailing 60ft tow line fits within the safe water radius.
+An alternative inward heading of 48 degrees (northeast) points away from the nearest bank, although the stern tow remains within the same safe radius.
+If the game uses 0=east and positive rotation clockwise with positive y south, suggested southeast angle is 48 degrees / 0.837758 radians.
+Closer-shore starting offset for the existing camera: [-13.4,12.0] meters. Its original-shore clearance is 32.635m, and the 60ft stern tow endpoint at this southeast heading remains 32.581m clear. The geographic origin remains unchanged.
+
+VERIFIED NAMED FEATURE
+Jantzen Island is inner OSM way 55153810, explicitly tagged name=Jantzen Island.
+https://www.openstreetmap.org/way/55153810
+Approximate label position (mean of island vertices): [-613.68,-260.93] meters from the geographic origin.
+That is northwest of the geographic origin. The polygon itself is holes[1].
+
+Geometry represents mapped water extent only. Buildings, trees, docks, roads, and gameplay obstacles added by the game are stylized unless sourced separately.
+
+GAME EDITION START POSITION
+The game catalog places the actual boat at [-2900,810] meters relative to the
+geographic origin, near the west end of the main lake and south of the western
+island. It heads -20 degrees in canvas coordinates (compass 70 degrees,
+east-northeast) into open water. Its simplified-shore clearance is 44.59 meters;
+the tube on a 100ft tow line has 40.43 meters of shore clearance at reset.

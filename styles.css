@@ -1,0 +1,217 @@
+:root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; --safe-top:env(safe-area-inset-top,0px); --safe-right:env(safe-area-inset-right,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); }
+* { box-sizing: border-box; }
+html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0b3549; }
+html, body { touch-action:none; overscroll-behavior:none; }
+body { user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+#lake { width:100%; height:100%; display:block; touch-action:none; }
+.hud { position: fixed; z-index: 2; inset: 0 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; padding:max(14px,var(--safe-top)) max(18px,var(--safe-right)) 10px max(18px,var(--safe-left)); pointer-events: none; background: linear-gradient(#062b3bdb, transparent); text-shadow: 0 2px 10px #001923; }
+.readouts { grid-column:2; display: flex; gap: clamp(12px, 4vw, 42px); text-align: center; }
+.readouts div { min-width: 58px; }
+.readouts span, .readouts small { display: block; color: #8dc7d5; font-size: 9px; letter-spacing: .12em; }
+.readouts small em { color:#f0d681; font-style:normal; letter-spacing:0; }
+.readouts strong { font: 700 23px/1.05 ui-monospace, monospace; color: white; }
+.metric-bar,.g-readout i { display:block; width:54px; height:3px; margin:3px auto 0; border-radius:4px; background:#ffffff22; overflow:hidden; }
+.metric-bar b,.g-readout i b { display:block; width:0%; height:100%; background:linear-gradient(90deg,#6ed6c2,#f1c85e,#e56342); border-radius:4px; }
+.g-readout i { display:block; width:54px; height:3px; margin:3px auto 0; border-radius:4px; background:#ffffff22; overflow:hidden; }.g-readout i b{display:block;width:25%;height:100%;background:linear-gradient(90deg,#6ed6c2,#f1c85e,#e56342);border-radius:4px;}
+.actions { grid-column:3; justify-self: end; display: flex; gap: 8px; pointer-events: auto; }
+.rider-picker select { height:27px; max-width:126px; padding:0 5px; border:1px solid #b7eaf244; border-radius:7px; background:#092e3d; color:#f3ebd0; font:700 9px ui-sans-serif,system-ui; }
+.views { display: flex; gap: 3px; padding: 3px; border: 1px solid #b7eaf233; border-radius: 10px; background: #05293888; }
+.views button { height: 26px; padding: 0 8px; border: 0; background: transparent; font-size: 9px; }
+.views button.selected { background: #dfb953; color: #173747; }
+button { border: 1px solid #b7eaf266; background: #092e3dbd; color: #f8fbf5; border-radius: 9px; font: 700 12px inherit; letter-spacing: .08em; }
+button:active { filter:brightness(1.18); }
+button:focus-visible { outline:2px solid #f1ce70; outline-offset:2px; }
+.actions button { height: 34px; min-width: 34px; padding: 0 11px; }
+#reset { width:54px; min-width:54px; height:28px; padding:0; border-radius:6px; font-size:10px; align-self:center; }
+.actions button.selected { background:#dfb953;color:#173747; }
+.wake-key { position: fixed; z-index: 2; left: 18px; top: 82px; display: flex; align-items: center; gap: 8px; color: #b7dae2; font-size: 10px; pointer-events: none; }
+.wake-key i { width: 36px; height: 4px; border-radius: 9px; background: linear-gradient(90deg,#f8f2d1,#4293a8aa,#4293a822); }
+.instruments { position: fixed; z-index: 2; right: 20px; bottom: 112px; display: flex; align-items: flex-end; gap: 12px; pointer-events: none; filter: drop-shadow(0 5px 12px #001b25aa); }
+.wheel-wrap { position:fixed; left:24px; bottom:105px; width:126px; display:flex; flex-direction:column; align-items:center; gap:5px; color:#b8dbe1; font-size:8px; letter-spacing:.12em; pointer-events:auto; }
+.wheel-wrap small { font-size:7px; color:#82bac5; white-space:nowrap; }.wheel-wrap small:empty{display:none}.wheel-wrap small.connected { color:#f2cd67; }
+.steering-wheel { position:relative; width:112px; height:112px; border:8px solid #d8c99b; border-radius:50%; box-shadow:inset 0 0 0 3px #4e3c2c,0 0 0 3px #142e38,0 8px 20px #001923aa; touch-action:none; }
+.steering-wheel i { position:absolute; width:7px; height:46px; left:45px; top:46px; background:#d8c99b; transform-origin:50% 3px; pointer-events:none; }
+.steering-wheel i:nth-child(2){transform:rotate(120deg)}.steering-wheel i:nth-child(3){transform:rotate(240deg)}
+.steering-wheel b { position:absolute; z-index:2; width:30px; height:30px; left:33px; top:33px; border-radius:50%; background:#d15d39; border:3px solid #593326; }
+.speedometer { position:fixed; z-index:2; left:50%; bottom:34px; transform:translateX(-50%); width:104px; height:82px; text-align:center; color:#d9edf0; font-size:9px; pointer-events:none; filter:drop-shadow(0 5px 12px #001b25aa); }
+.speed-face { position: relative; width: 100px; height: 62px; overflow: hidden; border: 3px solid #d8e8dc88; border-bottom: 0; border-radius: 100px 100px 8px 8px; background: radial-gradient(circle at 50% 96%,#163744 0 13%,transparent 14%),conic-gradient(from 225deg at 50% 100%,#70d4c4 0 20%,#ebcc5b 20% 43%,#e76543 43% 50%,transparent 50%); }
+.speed-face::after { content:""; position:absolute; inset:6px 6px 0; border-radius:90px 90px 0 0; background:#082d3c; }
+.speed-face i { position:absolute; z-index:2; width:38px; height:3px; left:50%; bottom:3px; transform-origin:0 50%; transform:rotate(-180deg); background:#fff3c6; border-radius:4px; }
+.speed-face b { position:absolute; z-index:3; left:45px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#e9c25d; }
+.speed-face span { position:absolute; z-index:3; font:700 8px ui-monospace,monospace; }.s0{left:7px;bottom:4px}.s10{left:13px;top:31px}.s20{left:50%;top:8px;transform:translateX(-50%)}.s30{display:block;right:13px;top:31px}.smax{right:6px;bottom:4px}
+.speedometer small { letter-spacing:.16em; }
+.speedometer .cruise-indicator { display:none; color:#f1d67e; font:700 8px ui-monospace,monospace; letter-spacing:.08em; }
+.speedometer.cruise-active > small:not(.cruise-indicator) { display:none; }
+.speedometer.cruise-active .cruise-indicator { display:block; }
+.marine-compass { width:60px; display:flex; flex-direction:column; align-items:center; gap:2px; color:#d9edf0; pointer-events:none; filter:drop-shadow(0 4px 9px #001923aa); }
+.compass-dial { position:relative; width:58px; height:58px; overflow:hidden; border:4px solid #bea96f; border-radius:50%; background:radial-gradient(circle at 35% 28%,#e8f7f544 0 7%,transparent 28%),#082d3c; box-shadow:inset 0 0 0 2px #273d43,inset 0 0 12px #001821; }
+.compass-dial::after { content:""; position:absolute; z-index:5; inset:3px; border-radius:50%; background:linear-gradient(135deg,#e9ffff2b 0 26%,transparent 28% 72%,#00182444); }
+.compass-card { position:absolute; z-index:2; inset:5px; border:1px solid #87aeb5; border-radius:50%; background:repeating-conic-gradient(from -1deg,#d8e8dcaa 0 1deg,transparent 1deg 15deg),#0a3a4a; transform-origin:50% 50%; }
+.compass-card::before { content:""; position:absolute; z-index:1; inset:7px; border:1px solid #5d8790; border-radius:50%; background:#0a3a4a; }
+.compass-card::after { content:""; position:absolute; z-index:4; left:50%; top:50%; width:4px; height:4px; transform:translate(-50%,-50%); border-radius:50%; background:#e7d38d; }
+.compass-card span { position:absolute; z-index:3; color:#dbe9e5; font:700 7px ui-monospace,monospace; line-height:1; }.compass-card .north{left:50%;top:2px;transform:translateX(-50%);color:#e86b4d}.compass-card .east{right:3px;top:50%;transform:translateY(-50%)}.compass-card .south{left:50%;bottom:2px;transform:translateX(-50%)}.compass-card .west{left:3px;top:50%;transform:translateY(-50%)}
+.compass-lubber { position:absolute; z-index:6; left:50%; top:1px; width:0; height:0; transform:translateX(-50%); border-left:4px solid transparent; border-right:4px solid transparent; border-top:9px solid #f06d4e; }
+.throttle-meter { display:flex; flex-direction:column; align-items:center; gap:5px; color:#b8dbe1; font-size:8px; letter-spacing:.12em; pointer-events:auto; }
+.throttle-slot { position:relative; width:76px; height:150px; border:0; background:transparent; overflow:visible; touch-action:none; }
+.throttle-slot::before { content:""; position:absolute; z-index:0; left:50%; top:5px; bottom:5px; width:16px; transform:translateX(-50%); border:1px solid #cfb07a55; border-radius:10px; background:linear-gradient(to bottom,#342a2342 0 64%,#e7dcc455 65% 75%,#29251f42 76%); box-shadow:inset 0 0 8px #001d2966,0 3px 8px #00182033; pointer-events:none; }
+.throttle-slot::after { content:"N"; position:absolute; z-index:1; left:9px; right:9px; top:70%; height:2px; transform:translateY(-50%); background:#eaf3e877; color:#dcebe8; font:700 8px ui-monospace,monospace; text-align:right; padding-right:1px; pointer-events:none; }
+.throttle-slot b { position:absolute; z-index:3; left:50%; top:calc(70% - 9px); width:64px; height:18px; transform:translateX(-50%); border-radius:10px; background:#d8c99b; border:3px solid #4e3c2c; box-shadow:0 3px 7px #00192388; pointer-events:none; }
+.throttle-slot em { position:absolute; z-index:2; left:3px; font:700 8px ui-monospace,monospace; color:#cce4e7; font-style:normal; text-shadow:0 1px 5px #001923; pointer-events:none; }.throttle-slot em:first-child{top:7px}.throttle-slot em:nth-of-type(2){bottom:20px}
+.throttle-slot output { position:absolute; z-index:2; left:-8px; right:-8px; bottom:5px; text-align:center; font:700 8px ui-monospace,monospace; color:#fff0bd; text-shadow:0 1px 5px #001923; pointer-events:none; }
+dialog { width: min(520px, calc(100% - 34px)); max-height:calc(100dvh - 24px); overflow-y:auto; border: 1px solid #9adce855; border-radius: 18px; background: #082f40f2; color: #eaf7f8; padding: 26px; box-shadow: 0 20px 80px #00161dcc; }
+dialog::backdrop { background: #00151dbb; backdrop-filter: blur(4px); }
+dialog h1 { max-width: 390px; margin: 0 30px 12px 0; font: 700 28px/1.08 Georgia, serif; color: #fff1c5; }
+dialog p { line-height: 1.5; color: #c6e0e5; }
+dialog dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+dialog dl div { padding: 10px; background: #fff1; border-radius: 9px; }
+dialog dt { font-size: 10px; color: #83bfcd; letter-spacing: .12em; }
+dialog dd { margin: 3px 0 0; font-weight: 700; }
+#close-help,#close-physics { position: absolute; right: 14px; top: 14px; width: 44px; height: 44px; font-size: 22px; }
+.note { font-size: 11px; opacity: .7; }
+.about-card { margin-top:18px; padding:14px; border:1px solid #9adce827; border-radius:11px; background:#ffffff09; }
+.about-card h2 { margin:0 0 6px; color:#effafa; font-size:13px; letter-spacing:.03em; }
+.about-card p { margin:6px 0 0; font-size:11px; }
+.about-card .about-links { color:#f1ce70; font:700 9px/1.6 ui-monospace,monospace; }
+.about-card a { color:#f1ce70; }
+#physics-panel { padding:0; background:linear-gradient(155deg,#0b3a4d 0,#082d3e 45%,#062736 100%); scrollbar-color:#dfb95366 #00192333; }
+.physics-panel-header { position:sticky; z-index:3; top:0; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:20px 18px 15px; border-bottom:1px solid #8fd8e633; background:#082e3ff2; backdrop-filter:blur(14px); box-shadow:0 9px 24px #00192344; }
+.physics-panel-header h1 { margin:2px 0 5px; font-size:26px; }
+.physics-panel-header p { max-width:330px; margin:0; color:#a8ced6; font-size:11px; line-height:1.4; }
+.physics-kicker { color:#f1ce70; font:700 8px/1 ui-monospace,monospace; letter-spacing:.18em; }
+#physics-panel .physics-panel-header #close-physics { position:static; flex:0 0 auto; width:44px; height:44px; }
+.physics-sections { display:grid; gap:12px; padding:14px; }
+.physics-section { overflow:hidden; border:1px solid #9adce827; border-radius:13px; background:linear-gradient(145deg,#ffffff0d,#ffffff05); box-shadow:inset 0 1px #ffffff0b; }
+.physics-section>header { display:flex; align-items:flex-start; gap:10px; padding:12px 12px 10px; border-bottom:1px solid #9adce819; }
+.physics-section>header>span { flex:0 0 auto; padding-top:2px; color:#edc967; font:700 9px/1 ui-monospace,monospace; letter-spacing:.08em; }
+.physics-section h2 { margin:0; color:#effafa; font-size:13px; line-height:1.15; letter-spacing:.03em; }
+.physics-section>header p { margin:3px 0 0; color:#86b7c2; font-size:9px; line-height:1.4; }
+.physics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 12px; padding:13px 12px 14px; }
+.physics-grid label { display:grid; grid-template-columns:minmax(0,1fr) auto; align-content:start; gap:6px; min-width:0; color:#bedee4; font-size:10px; line-height:1.3; }
+.physics-grid .physics-wide { grid-column:1 / -1; }
+.physics-grid output { overflow:hidden; color:#f3d77d; font:700 10px ui-monospace,monospace; text-align:right; text-overflow:ellipsis; white-space:nowrap; }
+.physics-grid input[type="range"] { grid-column:1 / -1; width:100%; height:18px; margin:0; accent-color:#dfb953; cursor:pointer; }
+.physics-grid label>small { grid-column:1 / -1; color:#80aeb8; font-size:8px; line-height:1.4; }
+.physics-grid .rider-picker select,.physics-grid .physics-select select { grid-column:1 / -1; width:100%; max-width:none; height:34px; padding:0 8px; border:1px solid #b7eaf23b; border-radius:8px; background:#062b3b; color:#f3ebd0; font:700 9px ui-sans-serif,system-ui; }
+.physics-profile { display:grid; gap:4px; padding:10px 11px; border:1px solid #9adce81f; border-radius:9px; background:#ffffff09; }
+.physics-profile span { color:#80aeb8; font-size:8px; letter-spacing:.1em; text-transform:uppercase; }
+.physics-profile strong { color:#fff1c5; font-size:13px; }
+.physics-profile small { color:#80aeb8; font-size:8px; line-height:1.4; }
+.physics-grid .physics-toggle { display:grid; grid-template-columns:auto 1fr; align-items:center; align-content:center; gap:2px 8px; min-height:42px; padding:9px 10px; border:1px solid #9adce81f; border-radius:9px; background:#ffffff09; cursor:pointer; }
+.physics-grid .physics-toggle input { grid-row:1 / span 2; width:16px; height:16px; margin:0; accent-color:#dfb953; }
+.physics-grid .physics-toggle span { color:#d7ecef; font-weight:700; }
+.physics-grid .physics-toggle small { grid-column:2; }
+.physics-note { margin:0; padding:0 18px 14px; color:#79a7b1; font-size:9px; line-height:1.45; }
+.physics-actions { position:sticky; z-index:3; bottom:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 14px max(12px,env(safe-area-inset-bottom)); border-top:1px solid #8fd8e633; background:#062b3bf2; backdrop-filter:blur(14px); box-shadow:0 -9px 24px #00192344; }
+.physics-actions button { min-height:44px; padding:0 10px; font-size:10px; }
+.physics-actions .physics-primary { border-color:#e8cf7c88; background:#dfb953; color:#153747; }
+@media (hover: hover) and (pointer: fine) { .controls { opacity: .38; } .controls:hover { opacity: 1; } }
+@media (min-width: 701px) {
+  #app:is(.view-driver,.view-helm) .speedometer { left:calc(50% - 318px); top:95px; bottom:auto; }
+  #app:is(.view-driver,.view-helm) .marine-compass { position:fixed; z-index:4; left:calc(50% + 270px); top:101px; }
+}
+@media (min-width: 901px) {
+  #physics-panel[open] { position:fixed; z-index:10; inset:12px 12px 12px auto; margin:0; width:420px; height:calc(100dvh - 24px); max-height:none; }
+  #physics-panel::backdrop { background:transparent; backdrop-filter:none; }
+  #app.physics-open #lake { width:calc(100% - 444px); }
+  #app.physics-open .hud { right:444px; }
+  #app.physics-open .instruments { right:464px; }
+  #app.physics-open .speedometer { left:calc((100% - 444px)/2); }
+  #app.physics-open:is(.view-driver,.view-helm) .speedometer { left:max(60px,calc((100% - 444px)/2 - 318px)); }
+  #app.physics-open:is(.view-driver,.view-helm) .marine-compass { left:calc((100% - 444px)/2 + 270px); }
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  #app:is(.view-driver,.view-helm) .speedometer { left:calc(50% - 300px); transform:translateX(-50%) scale(.82); transform-origin:center; }
+  #app:is(.view-driver,.view-helm) .marine-compass { left:calc(50% + 260px); transform:scale(.82); transform-origin:left center; }
+}
+@media (max-width: 700px) {
+  .hud { grid-template-columns:1fr auto; padding:max(8px,var(--safe-top)) max(10px,var(--safe-right)) 6px max(10px,var(--safe-left)); }
+  .readouts { grid-row:2; grid-column:1 / -1; width:100%; justify-content:center; gap:4px; margin-top:30px; padding-top:4px; border-top:1px solid #b7eaf222; }
+  .readouts div { flex:1 1 0; min-width:0; }
+  .readouts span { font-size:8px; letter-spacing:.08em; white-space:nowrap; }
+  .readouts strong { font-size:21px; }
+  .readouts small { font-size:7px; letter-spacing:.04em; }
+  .metric-bar,.g-readout i { width:48px; margin-top:2px; }
+  .wake-key { display:none; }
+  .actions { grid-column:2; flex-wrap:wrap; justify-content:flex-end; gap:4px; max-width:190px; }
+  .actions button { height:44px; min-width:44px; padding-inline:10px; }
+  #reset { position:fixed; z-index:5; left:50%; bottom:max(30px,var(--safe-bottom)); width:56px; min-width:56px; height:30px; transform:translateX(-50%); }
+  .views { display:none; }
+  .instruments { position:fixed; right:max(14px,var(--safe-right)); bottom:max(28px,var(--safe-bottom)); transform:none; }
+  .speedometer { display:block; z-index:4; top:max(6px,var(--safe-top)); bottom:auto; transform:translateX(-50%) scale(.72); transform-origin:top center; }
+  .wheel-wrap { position:fixed; z-index:5; left:max(18px,var(--safe-left)); right:auto; bottom:max(28px,var(--safe-bottom)); width:126px; transform:none; }
+  .marine-compass { position:fixed; z-index:4; left:max(18px,var(--safe-left)); top:max(8px,var(--safe-top)); }
+  .throttle-slot { width:82px; height:170px; }
+  #physics-panel { width:calc(100% - 12px); max-height:calc(100dvh - 12px); border-radius:14px; }
+  .physics-panel-header { padding:15px 14px 12px; }
+  .physics-panel-header h1 { font-size:23px; }
+  .physics-sections { gap:10px; padding:10px; }
+  .physics-section>header { padding:11px 10px 9px; }
+  .physics-grid { padding:12px 10px 13px; gap:13px 10px; }
+  .physics-actions { padding-inline:10px; }
+}
+.hide-digital-gauges .readouts { display:none; }
+@media (max-width: 390px) {
+  .wheel-wrap { left:max(10px,var(--safe-left)); }
+  .instruments { right:max(8px,var(--safe-right)); }
+  .views button { padding-inline:6px; }
+  .readouts strong { font-size:19px; }
+  .speedometer { transform:translateX(-50%) scale(.65); }
+  .marine-compass { left:max(12px,var(--safe-left)); }
+}
+
+@media (max-width: 360px) and (orientation: portrait) {
+  .speedometer { left:43%; transform:translateX(-50%) scale(.55); }
+  .wheel-wrap { width:98px; }
+  .steering-wheel { align-self:flex-start; scale:.78; transform-origin:left bottom; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .actions button,.views button { height:44px; min-width:44px; }
+  .wheel-wrap { bottom:max(10px,var(--safe-bottom)); transform:scale(.78); transform-origin:left bottom; }
+  .marine-compass { display:none; }
+  .instruments { bottom:max(8px,var(--safe-bottom)); transform:scale(.78); transform-origin:right bottom; }
+  #reset { bottom:max(10px,var(--safe-bottom)); }
+  .speedometer { transform:translateX(-50%) scale(.58); }
+}
+/* Location controls for shared and solo play. */
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.map-panel .physics-grid { gap:10px; }
+#map-select:focus-visible { outline:2px solid #f1ce70; outline-offset:2px; }
+#show-map { min-height:40px; padding:10px; font-size:10px; }
+#mini-map { display:block; width:100%; height:auto; aspect-ratio:460/220; border-radius:6px; }
+#mini-map[hidden],#show-map[hidden],.map-credit[hidden] { display:none; }
+.map-credit { display:block; margin-top:7px; font-size:8px; color:#a0c4b8; }
+#app .wake-key { top:auto; bottom:18px; font-size:9px; }
+#map-dialog { width:min(920px,calc(100% - 28px)); padding:26px; background:#0b302e; }
+#map-dialog h1 { margin-top:9px; font-size:38px; }
+#map-dialog > p { font-size:13px; }
+.map-eyebrow { color:#b2c697; font-size:10px; letter-spacing:.2em; }
+#close-map { position:absolute; top:14px; right:14px; width:40px; height:40px; font-size:25px; }
+#lake-chart { display:block; width:100%; aspect-ratio:1440/760; border-radius:10px; border:1px solid #6f927b55; }
+.chart-legend { display:flex; flex-wrap:wrap; gap:20px; margin:14px 0; color:#ccdabe; font-size:11px; }
+.chart-legend span { display:flex; align-items:center; gap:7px; }
+.chart-legend i { width:7px; height:7px; border-radius:50%; }
+#online-notice { position:absolute; z-index:6; top:210px; left:50%; transform:translateX(-50%); max-width:calc(100% - 40px); padding:10px 15px; border:1px solid #94cdb866; border-radius:10px; color:#e5eedc; background:#082f3be8; font:12px system-ui; text-align:center; pointer-events:none; }
+#online-notice[hidden],#player-minimap-wrap[hidden],#shared-lake-settings[hidden] { display:none; }
+#online-status { color:#8ee2d2; font-size:13px; margin:0 0 14px; }
+#player-name { display:block; box-sizing:border-box; width:100%; padding:10px; margin:8px 0 14px; color:#ebedda; background:#0b3540; border:1px solid #749c9b66; border-radius:7px; font:14px system-ui; }
+.player-map-option { display:flex!important; align-items:center; gap:9px; margin:12px 0; font-size:13px; }
+.player-map-option input { width:18px; height:18px; accent-color:#e5c276; }
+#shared-lake-settings small { display:block; line-height:1.5; color:#aac3be; }
+#player-minimap-wrap { position:absolute; pointer-events:none; z-index:4; left:16px; top:78px; width:210px; border:1px solid #91bdbb22; border-radius:9px; overflow:hidden; background:transparent; }
+#player-minimap { display:block; width:100%; height:auto; }
+#player-minimap-caption { display:block; padding:5px 7px; color:#e2e8ca; text-align:center; font:10px system-ui; text-shadow:0 1px 3px #062832,0 0 4px #062832; }
+@media(max-width:700px){#player-minimap-wrap { top:auto; left:10px; bottom:155px; width:145px; } #online-notice { top:210px; font-size:11px; }}
+@media(min-width:701px) and (max-width:1000px){#player-minimap-wrap { top:210px; width:175px; }}
+.boat-dot { background:#fff4cb; }.tube-dot { background:#f0b957; }
+@media(max-width:700px) {
+  #map-dialog { padding:18px; }
+  #map-dialog h1 { font-size:29px; }
+  #map-dialog > p { font-size:11px; }
+  .chart-legend { gap:10px; font-size:10px; }
+}
+#lake:focus { outline:none; }
+
+#physics-mode-note{margin:0 20px 16px;padding:12px 14px;border:1px solid #e7c87866;border-radius:10px;background:#e7c87814;color:#f0dba7;font-size:12px;line-height:1.55}
+[data-physics-tuning][hidden],.physics-note[hidden],#replay-trace[hidden]{display:none}
+[data-map="oswego"] .physics-actions{grid-template-columns:1fr}

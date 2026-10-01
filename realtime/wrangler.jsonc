@@ -1,0 +1,14 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "wake-rider-realtime",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-30",
+  "workers_dev": true,
+  "durable_objects": {
+    "bindings": [{ "name": "LAKE_ROOM", "class_name": "LakeRoom" }]
+  },
+  "exports": { "LakeRoom": { "type": "durable-object", "storage": "sqlite" } },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://wake-rider-lake-oswego.sagan1122.chatgpt.site,https://wakerider.saganweb.com"
+  }
+}

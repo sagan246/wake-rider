@@ -1,0 +1,16 @@
+cloudflared*.log
+*.tmp
+Thumbs.db
+.DS_Store
+node_modules/
+www/
+dist/
+preview-server*.log
+.local-data/
+server/assets.generated.js
+.env
+.env.*
+!.env.example
+.wrangler/
+.dev.vars
+.dev.vars.*

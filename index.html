@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#123f56">
+  <meta name="application-name" content="Wake Rider Lab">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <title>Wake Rider Lab</title>
+  <link rel="stylesheet" href="styles.css?v=28">
+</head>
+<body>
+  <main id="app" class="view-driver hide-digital-gauges">
+    <canvas id="lake" tabindex="0" aria-label="Boat and tube simulator"></canvas>
+    <header class="hud">
+      <section class="readouts">
+        <div><span>BOAT</span><strong id="speed">0.0</strong><small>mph · <em id="peak-speed">pk 0.0</em></small><i class="metric-bar"><b id="boat-bar"></b></i></div>
+        <div><span>ROPE LOAD</span><strong id="tension">0</strong><small>% · <em id="peak-tension">pk 0</em></small><i class="metric-bar"><b id="rope-bar"></b></i></div>
+        <div><span>AIR</span><strong id="air">0.0</strong><small>ft · <em id="peak-air">pk 0.0</em></small><i class="metric-bar"><b id="air-bar"></b></i></div>
+        <div><span>TUBE</span><strong id="tube-speed">0.0</strong><small>mph · <em id="peak-tube-speed">pk 0.0</em></small><i class="metric-bar"><b id="tube-bar"></b></i></div>
+        <div class="g-readout"><span>G FORCE</span><strong id="g-force">1.0</strong><small id="peak-g">peak 1.0</small><i><b id="g-bar"></b></i></div>
+      </section>
+      <section class="actions">
+        <nav class="views" aria-label="Camera view">
+          <button data-view="top" type="button">TOP</button>
+          <button data-view="driver" class="selected" type="button">DRIVER</button>
+          <button data-view="helm" title="Driver's eyes · first person" type="button">HELM</button>
+          <button data-view="tube" type="button">TUBE</button>
+          <button data-view="person" type="button">RIDER</button>
+        </nav>
+        <button id="reset" type="button">RESET</button>
+        <button id="physics-tools" type="button">PHYSICS</button>
+        <button id="help" type="button">?</button>
+      </section>
+    </header>
+    <div id="online-notice" role="status">Joining the shared lake…</div>
+    <aside id="player-minimap-wrap" hidden aria-label="Live player minimap">
+      <canvas id="player-minimap" width="460" height="220" role="img" aria-label="Nearby shoreline and players, centered on your boat; edge arrows point to distant players"></canvas>
+      <small id="player-minimap-caption">Shared lake</small>
+    </aside>
+    <dialog id="map-dialog" aria-labelledby="map-title">
+      <button id="close-map" type="button" aria-label="Close lake map">×</button>
+      <span class="map-eyebrow">EXPLORE THE LAKE</span>
+      <h1 id="map-title">Lake map</h1>
+      <p>Shoreline, islands, and live players</p>
+      <canvas id="lake-chart" width="1440" height="760" role="img" aria-label="Full lake map showing all players, your boat, tube, and launch location"></canvas>
+      <div class="chart-legend"><span>➤ Colored boats = players</span><span><i class="tube-dot"></i>Tube</span><span>○ West launch area</span></div>
+      <p class="note">Use Physics → Lake map to return to Open Water. Switching maps starts a fresh run. Shoreline follows OpenStreetMap; trees and buildings are decorative.</p>
+      <a class="map-credit" href="licenses.html#map-data">Map © OpenStreetMap contributors · ODbL</a>
+    </dialog>
+    <aside class="wake-key"><i></i><span>Wake age: bright → faded</span></aside>
+    <aside class="wheel-wrap" aria-label="Steering control">
+      <div id="compass" class="marine-compass" role="img" aria-label="Marine compass, boat heading north, 0 degrees">
+        <div class="compass-dial"><div id="compass-card" class="compass-card"><span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">W</span></div><i class="compass-lubber" aria-hidden="true"></i></div>
+      </div>
+      <div id="steering-wheel" class="steering-wheel" role="slider" aria-label="Steering wheel" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"><i></i><i></i><i></i><b></b></div>
+      <small id="controller-status" aria-live="polite"></small>
+    </aside>
+    <aside class="speedometer" aria-label="Analog boat speedometer">
+      <div class="speed-face">
+        <i id="speed-needle"></i><b></b>
+        <span class="s0">0</span><span id="speed-quarter" class="s10">11</span><span id="speed-half" class="s20">23</span><span id="speed-three-quarter" class="s30">34</span><span id="speed-max-label" class="smax">45</span>
+      </div>
+      <small>BOAT MPH</small>
+      <small id="cruise-indicator" class="cruise-indicator">CRUISE 20</small>
+    </aside>
+    <aside class="instruments" aria-label="Boat instruments">
+      <div class="throttle-meter">
+        <div id="throttle-gate" class="throttle-slot" role="slider" aria-label="Forward and reverse throttle" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+          <em>FWD</em><b id="throttle-handle"></b><em>REV</em><output id="throttle-value">NEUTRAL</output>
+        </div>
+      </div>
+    </aside>
+    <dialog id="instructions">
+      <button id="close-help" aria-label="Close">×</button>
+      <h1>Build wakes. Whip the tube. Send it.</h1>
+      <p>Hold throttle and steer broad circles. Your wake persists, spreads, and fades. Loop back and pull the tube across a bright wake to launch.</p>
+      <dl>
+        <div><dt>Steer</dt><dd>A / D or ← / →</dd></div>
+        <div><dt>Throttle</dt><dd>W or ↑</dd></div>
+        <div><dt>Reverse</dt><dd>S or ↓</dd></div>
+        <div><dt>Xbox controller</dt><dd>Left stick · RT forward · LT reverse</dd></div>
+        <div><dt>Touch controls</dt><dd>Turn the wheel · position the latching throttle</dd></div>
+        <div><dt>Camera FOV</dt><dd>Mouse wheel · pinch open water</dd></div>
+        <div><dt>Reset</dt><dd>R</dd></div>
+        <div><dt>Views</dt><dd>1 Top · 2 Driver · 3 Tube · 4 Rider · 5 Helm (driver's eyes)</dd></div>
+      </dl>
+      <p class="note">This is a tuned physics prototype, not a real-world safety or training model.</p>
+      <section class="about-card" aria-label="About Wake Rider Lab">
+        <h2>About this app</h2>
+        <p>The shared lake has room for up to 12 players. Each player has their own colored boat and tube. Everyone sees the same wakes: cross a friend’s wake to lift the boat or launch your tube. Open Water is solo. No account is needed.</p>
+        <p>The minimap starts on and follows your boat. Edge arrows point to farther players. Set your skipper name, hide the minimap, or open the whole-lake chart in Physics → Lake map. Reset finds a clear nearby launch spot. Boats bump each other. Shared wakes keep spreading and fading after a boat passes; your boat and tube react to those waves.</p>
+        <p class="note">The boat and rider are fictional. This remains an experimental game, not a real-world boating model.</p>
+        <p class="about-links"><a href="privacy.html">Privacy policy</a> · <a href="support.html">Support</a> · <a href="licenses.html">Open-source licenses</a></p>
+        <p class="note">Store URLs: boat.saganweb.com/privacy.html · boat.saganweb.com/support.html</p>
+      </section>
+    </dialog>
+    <dialog id="physics-panel">
+      <header class="physics-panel-header">
+        <div>
+          <span class="physics-kicker">LIVE TUNING</span>
+          <h1>Physics lab</h1>
+          <p id="physics-panel-description">Adjust the boat, tow setup, rider, water, and camera while the simulation runs.</p>
+        </div>
+        <button id="close-physics" aria-label="Close physics panel">×</button>
+      </header>
+      <p id="physics-mode-note" role="status">Shared lake · Physics are fixed at the defaults for every player. Switch to Open Water to tune them.</p>
+      <div class="physics-sections">
+        <section class="physics-section map-panel" aria-labelledby="map-settings-title">
+          <header><span>MAP</span><div><h2 id="map-settings-title">Lake map</h2><p>Choose where to drive. Switching maps starts a fresh run.</p></div></header>
+          <div class="physics-grid">
+            <label class="physics-select physics-wide">Location
+              <select id="map-select" aria-label="Lake map">
+                <option value="oswego">Shared Lake (multiplayer)</option>
+                <option value="open">Open Water (original)</option>
+              </select>
+              <small id="map-description">Shoreline &amp; islands · multiplayer</small>
+            </label>
+            <div class="physics-wide" id="shared-lake-settings">
+              <p id="online-status" role="status">Joining the shared lake…</p>
+              <label class="physics-select">Skipper name <input id="player-name" type="text" maxlength="20" placeholder="Automatic skipper name" autocomplete="off" aria-label="Skipper name"></label>
+              <label class="physics-select">Your test bots
+                <select id="test-bots" aria-label="Your test bots">
+                  <option value="0">Off</option><option value="1">1 bot</option><option value="2">2 bots</option><option value="3">3 bots</option>
+                </select>
+                <small id="test-bots-status" role="status">Bots are off.</small>
+              </label>
+              <small>Bots cruise near the launch, tow tubes, and make shared, rideable wakes. They leave when you leave. Limit 3 across the lake; real players get priority.</small>
+              <label class="player-map-option"><input id="show-player-minimap" type="checkbox" checked> Show player minimap while driving</label>
+              <small>Follows your boat with a 1 km-wide view. Edge arrows point toward distant players.</small>
+              <small>Share this page with friends to join the same lake. Up to 12 colored boats; no login. See and ride each other’s wakes. Open Water stays solo.</small>
+            </div>
+            <canvas class="physics-wide" id="mini-map" width="460" height="220" role="img" aria-label="Lake overview with your boat position"></canvas>
+            <button class="physics-wide" id="show-map" type="button" aria-label="Open lake map">OPEN LAKE MAP</button>
+            <a class="map-credit physics-wide" href="licenses.html#map-data">Map © OpenStreetMap contributors</a>
+            <span id="map-status" class="sr-only" role="status"></span>
+          </div>
+        </section>
+        <section class="physics-section" data-physics-tuning>
+          <header><span>01</span><div><h2>Boat & tow</h2><p>Fine-tune the wake boat and its tow connection.</p></div></header>
+          <div class="physics-grid">
+            <div class="physics-profile physics-wide">
+              <span>Boat</span>
+              <strong>Wake Boat 22</strong>
+              <input id="boat-profile" type="hidden" value="wake-boat-22">
+              <small id="boat-profile-details">V-drive inboard · 350 hp · 3,200 lb · 21.75 × 8 ft · 45 mph reference top</small>
+            </div>
+            <label>Boat length <output id="boat-length-value">21.75 ft</output><input id="boat-length" type="range" min="18" max="25" step="0.25" value="21.75"></label>
+            <label>Rope length <output id="rope-length-value">60 ft</output><input id="rope-length" type="range" min="30" max="100" step="5" value="60"><small>Resets the run</small></label>
+            <label class="physics-select physics-wide">Tow attachment
+              <select id="tow-attachment" aria-label="Boat tow attachment">
+                <option value="ski" selected>Ski tow point · low / rear</option>
+                <option value="tower">Tower / high pylon · high / central</option>
+              </select>
+              <small>Changes both the tow height and where rope force acts on the hull.</small>
+            </label>
+            <label class="physics-wide">Tow-point height <output id="tow-point-height-value">3.5 ft</output><input id="tow-point-height" type="range" min="0.5" max="8" step="0.25" value="3.5"><small>Changes line angle, tube lift, pitch, and rope-load timing. Resets the run.</small></label>
+          </div>
+        </section>
+
+        <section class="physics-section" data-physics-tuning>
+          <header><span>02</span><div><h2>Rider & tube</h2><p>Change how much mass, grip, and water resistance the tow system carries.</p></div></header>
+          <div class="physics-grid">
+            <label class="rider-picker physics-wide">Rider preset
+              <select id="rider-profile" aria-label="Tube rider">
+                <option value="light">Light · grip 55</option>
+                <option value="balanced" selected>Balanced · grip 75</option>
+                <option value="heavy">Heavy · grip 90</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            <label>Rider weight <output id="rider-weight-value">130 lb</output><input id="rider-weight" type="range" min="80" max="300" step="5" value="130"></label>
+            <label>Grip strength <output id="rider-grip-value">75%</output><input id="rider-grip" type="range" min="25" max="100" step="1" value="75"></label>
+            <label class="physics-wide">Tube water friction <output id="tube-friction-value">80%</output><input id="tube-friction" type="range" min="40" max="180" step="5" value="80"><small>Lower values slide farther; higher values scrub speed and catch an edge harder.</small></label>
+          </div>
+        </section>
+
+        <section class="physics-section" data-physics-tuning>
+          <header><span>03</span><div><h2>Water & world</h2><p>Tune wake energy, persistence, and the gravity shared by every vertical system.</p></div></header>
+          <div class="physics-grid">
+            <label class="physics-wide">Gravity <output id="gravity-value">1.00 g · 32.2 ft/s²</output><input id="gravity" type="range" min="25" max="200" step="5" value="100"><small>Affects boat, tube, rider, G-force normalization, and gravity-wave speed. Earth is 100%. Changing it resets the run.</small></label>
+            <label>Wake strength <output id="wake-strength-value">110%</output><input id="wake-strength" type="range" min="60" max="150" step="5" value="110"></label>
+            <label>Wake life <output id="wake-life-value">36 sec</output><input id="wake-life" type="range" min="18" max="55" step="1" value="36"></label>
+          </div>
+        </section>
+
+        <section class="physics-section" data-physics-tuning>
+          <header><span>04</span><div><h2>Handling & speed</h2><p>Set available performance separately from the optional towing-speed governor.</p></div></header>
+          <div class="physics-grid">
+            <label class="physics-wide">Boat performance maximum <output id="max-boat-speed-value">45 mph</output><input id="max-boat-speed" type="range" min="5" max="100" step="1" value="45"><small>Controls available performance and acceleration; it is not cruise control.</small></label>
+            <label>Hairpin steering <output id="hairpin-steering-value">100%</output><input id="hairpin-steering" type="range" min="50" max="150" step="5" value="100"><small>Inboards retain stronger rudder and tracking-fin bite.</small></label>
+            <label class="physics-toggle"><input id="cruise-enabled" type="checkbox"><span>Cruise control</span></label>
+            <label class="physics-wide">Cruise speed <output id="cruise-speed-value">20 mph</output><input id="cruise-speed" type="range" min="5" max="45" step="0.5" value="20"><small>Leave the throttle above the needed power; cruise smoothly limits it to the set speed.</small></label>
+          </div>
+        </section>
+
+        <section class="physics-section">
+          <header><span>VIEW</span><div><h2>View & diagnostics</h2><p>Choose the perspective and expose the solver when you want to inspect it.</p></div></header>
+          <div class="physics-grid">
+            <label class="physics-select">Camera POV
+              <select id="camera-view" aria-label="Camera point of view">
+                <option value="top">Top</option>
+                <option value="driver" selected>Driver</option>
+                <option value="helm">Helm — Driver's eyes</option>
+                <option value="tube">Tube</option>
+                <option value="person">Rider</option>
+              </select>
+            </label>
+            <small id="camera-view-note" class="physics-wide" role="status">Helm looks forward in the same style as the rear-view mirror, with a small translucent bow.</small>
+            <label>Camera FOV <output id="camera-fov-value">100°</output><input id="camera-fov" type="range" min="60" max="140" step="1" value="100"><small>Mouse wheel or pinch also works.</small></label>
+            <label class="physics-toggle"><input id="show-digital-gauges" type="checkbox"><span>Digital gauges</span></label>
+            <label class="physics-toggle"><input id="debug-mode" type="checkbox"><span>Physics overlay</span><small>Water contacts, steering hardware, tow anchors, rope nodes, force vector, and traces.</small></label>
+          </div>
+        </section>
+      </div>
+      <p class="physics-note">The fictional baseline uses representative wake-boat dimensions. Exact real-world acceleration and wake behavior depend on propulsion, ballast, passenger load, water, and setup.</p>
+      <footer class="physics-actions">
+        <button id="reset-physics-defaults" type="button">RESTORE DEFAULTS</button>
+        <button id="replay-trace" class="physics-primary" type="button">REPLAY TRACE</button>
+      </footer>
+    </dialog>
+  </main>
+  <script type="module" src="game.js?v=28"></script>
+</body>
+</html>

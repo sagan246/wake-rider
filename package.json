@@ -1,0 +1,46 @@
+{
+  "name": "wake-rider-lab-oswego",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared-lake and solo open-water editions of Wake Rider Lab",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build-mobile.mjs",
+    "build:site": "node tools/build-site.mjs",
+    "dev:multiplayer": "node tools/serve-multiplayer.mjs",
+    "dev:realtime": "wrangler dev --config realtime/wrangler.jsonc --port 8787 --var ALLOWED_ORIGINS:http://127.0.0.1:8783",
+    "deploy:realtime": "wrangler deploy --config realtime/wrangler.jsonc",
+    "test:realtime": "node tests/realtime-room.mjs && node tests/socket-client.mjs && node tests/inactivity.mjs",
+    "test:renderers": "node tests/boat-model.mjs",
+    "test:multiplayer": "node tests/multiplayer-smoke.mjs && node tests/shared-wakes.mjs && node tests/bots.mjs && node tests/wake-prediction.mjs && node tests/peer-motion.mjs && node tests/boat-contacts.mjs && node tests/boat-bump-glide.mjs && node tests/tube-contacts.mjs && node tests/tube-tube-contacts.mjs && node tests/tube-impact-tuning.mjs",
+    "test": "node tests/physics-smoke.mjs && node tests/simulator-smoke.mjs && node tests/map-smoke.mjs && node tests/input-controls.mjs",
+    "check": "pnpm run test && pnpm run build",
+    "native:sync": "pnpm run build && cap sync",
+    "native:assets": "capacitor-assets generate --assetPath resources --ios --iconBackgroundColor \"#07506a\" --iconBackgroundColorDark \"#052f43\" --splashBackgroundColor \"#0b3549\" --splashBackgroundColorDark \"#061f2b\" && capacitor-assets generate --assetPath resources --android --iconBackgroundColor \"#07506a\" --iconBackgroundColorDark \"#052f43\" --splashBackgroundColor \"#0b3549\" --splashBackgroundColorDark \"#061f2b\"",
+    "android:sync": "pnpm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:debug": "pnpm run android:sync && cd android && gradlew.bat assembleDebug",
+    "android:bundle": "pnpm run android:sync && cd android && gradlew.bat bundleRelease",
+    "ios:sync": "pnpm run build && cap sync ios",
+    "ios:open": "cap open ios"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "dependencies": {
+    "@capacitor/app": "8.1.1",
+    "@capacitor/core": "8.5.1",
+    "@capacitor/status-bar": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.5.1",
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.1",
+    "@capacitor/ios": "8.5.1",
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
+    "esbuild": "0.28.2",
+    "wrangler": "4.144.0"
+  }
+}
