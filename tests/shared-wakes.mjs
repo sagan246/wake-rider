@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
-import { applyRoomAction } from '../multiplayer/room.js';
+import { applyRoomAction, MAX_PLAYERS } from '../multiplayer/room.js';
 import { MAX_WAKE_EVENTS, pruneWakeHistory, recordRoomWakes } from '../multiplayer/wake-history.js';
 import { createSharedWakeField } from '../simulation/shared-wakes.js';
 import { createSimulator } from '../simulation/simulator.js';
@@ -68,7 +68,7 @@ recordRoomWakes(gapRoom,{...origin,vx,vy},{...origin,x:origin.x+10000,vx,vy},0,2
 assert.equal(gapRoom.wakeEvents.length,0,'Reconnections never backfill long missing paths');
 
 const crowded={wakeSeq:0,wakeEvents:[]};
-for(let tick=0;tick<370;tick++)for(let player=0;player<12;player++){
+for(let tick=0;tick<370;tick++)for(let player=0;player<MAX_PLAYERS;player++){
  const from={x:tick*22,y:player*300,angle:0,vx:220,vy:0};
  recordRoomWakes(crowded,from,{...from,x:from.x+22},tick*100,(tick+1)*100,false);
 }

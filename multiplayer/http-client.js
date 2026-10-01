@@ -8,6 +8,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
   let generation=0,session=null,timer=null,abort=null,joined=false,ready=false,resetWanted=false,resetRevision=0,seq=0,ack=0,lastSuccess=0;
   let status='Solo · Open Water',self=null,peers=createPeerMotion(),count=0,botCount=0;
   let wakeCursor=0;
+  let waitingForSpace=false;
   function report(message){status=message;onStatus?.({message,ready,count,botCount,self});}
   function snapshot(data,started){
     const now=clock();
@@ -29,6 +30,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
     try{
       const data=await request(sent,abort.signal);
       if(run!==generation||checkIdle())return;
+      waitingForSpace=false;
       snapshot(data,started);
       if(action==='join'||action==='reset'){
         joined=true;resetWanted=sentReset!==resetRevision;
@@ -46,7 +48,9 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
       if(run!==generation)return;
       if(error.code==='idle'){leave();report(IDLE_MESSAGE);onIdle?.();return;}
       ready=false;delay=1000;
-      if(error.status===410){joined=false;ack=0;peers.clear();}
+      waitingForSpace=error.code==='room_full';
+      if(waitingForSpace){joined=false;ack=0;wakeCursor=0;peers.clear();}
+      else if(error.status===410){joined=false;ack=0;peers.clear();}
       else if(error.status===409&&joined)resetWanted=true;
       report(error.status?error.message:'Connection interrupted · reconnecting…');
     }finally{
@@ -57,6 +61,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
   function leave(){
     const old=session;
     generation++;clearTimeout(timer);abort?.abort();abort=null;session=null;joined=false;ready=false;peers.clear();count=0;botCount=0;self=null;wakeCursor=0;
+    waitingForSpace=false;
     if(old)fetcher('/api/lake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...old,action:'leave'}),keepalive:true}).catch(()=>{});
   }
   function setMap(id){
@@ -66,7 +71,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
     seq=0;ack=0;resetWanted=false;resetRevision=0;lastSuccess=0;
     report('Joining the shared lake…');void poll(generation);
   }
-  function reset(){if(!session)return;resetRevision++;resetWanted=true;ready=false;report('Finding a clear starting spot…');}
+  function reset(){if(!session||waitingForSpace)return;resetRevision++;resetWanted=true;ready=false;report('Finding a clear starting spot…');}
   function getPeers(){
     return peers.get(clock());
   }

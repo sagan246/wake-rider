@@ -61,10 +61,38 @@ advance(3000); assert.equal(s5.readyState, 0, 'A new connection has its own hand
 s5.open(); const beforeEpoch = spawns.length; reply(s5, { epoch: 'epoch-b' }); assert.equal(spawns.length, beforeEpoch + 1);
 client.setMap('open'); s5.emit('message', { data: '{}' }); advance(5000); assert.equal(client.ready, false); assert.equal(tasks.size, 0);
 
+const fullMessage = 'Lake full (16/16 players). Waiting for a spot — retrying automatically…';
+const rejectFull = socket => socket.message({ type: 'error', status: 409, code: 'room_full', error: fullMessage });
+client.setMap('oswego'); const f1 = sockets.at(-1); f1.open(); rejectFull(f1);
+assert.equal(client.ready, false); assert.equal(client.status, fullMessage, 'A rejected join retains its full notice after closing');
+client.reset(); assert.equal(client.status, fullMessage, 'Reset while waiting cannot claim a starting spot');
+advance(250); const f2 = sockets.at(-1); f2.open();
+assert.equal(client.status, fullMessage, 'Backoff and a fresh connection keep the full notice');
+assert.equal(f2.sent.at(-1).action, 'join'); rejectFull(f2);
+advance(500); const f3 = sockets.at(-1); f3.open(); reply(f3);
+assert.equal(client.ready, true); assert.notEqual(client.status, fullMessage, 'Admission clears the full notice');
+f3.close(); assert.match(client.status, /Connection interrupted/, 'A later network failure is not reported as full');
+advance(250); const f4 = sockets.at(-1); f4.open(); rejectFull(f4);
+assert.equal(client.status, fullMessage, 'A full room during reconnect also waits instead of requesting reset');
+advance(500); const f5 = sockets.at(-1); f5.open();
+assert.equal(f5.sent.at(-1).action, 'join');
+// Admission may have succeeded on a previous attempt whose reply was lost.
+// Even a resumed reservation now needs its new spawn after being room-full.
+const beforeAdmission = spawns.length; reply(f5, { resumed: true }); advance(50);
+assert.equal(spawns.length, beforeAdmission + 1, 'A resumed admission after full installs the newly reserved spawn');
+assert.equal(f5.sent.at(-1).action, 'sync', 'A rejected reconnect must not leave a spurious reset pending');
+f5.message({ type: 'error', status: 409, error: 'Position changed too quickly.' }); advance(50);
+assert.equal(f5.sent.at(-1).action, 'reset', 'Non-capacity conflicts still follow the normal reset path'); reply(f5);
+f5.close(); advance(250); const f6 = sockets.at(-1); f6.open(); rejectFull(f6);
+advance(500); const f7 = sockets.at(-1); f7.close();
+assert.match(client.status, /Connection interrupted/, 'A genuine failure on the next attempt replaces the old full notice');
+client.setMap('open'); rejectFull(f6); advance(5000);
+assert.equal(client.status, 'Solo · Open Water'); assert.equal(tasks.size, 0, 'Leaving the wait cancels all retries');
+
 let configCalls = 0, finishConfig, unwantedSocket = 0;
 const facade = createLakeClient({ read: () => ({ boat: body, tube: body }), socketFactory: () => { unwantedSocket++; return new Socket(); },
   fetcher: () => { configCalls++; return new Promise(resolve => { finishConfig = () => resolve(Response.json({ websocketUrl: 'wss://example.test/lake' })); }); } });
 facade.setMap('open'); assert.equal(configCalls, 0);
 facade.setMap('oswego'); facade.setMap('open'); finishConfig(); await new Promise(resolve => setImmediate(resolve));
 assert.equal(unwantedSocket, 0, 'A delayed config response cannot reconnect after switching to solo');
-console.log('Socket client passed: 20 Hz sends, no reconnect teleport, reset races, fresh correction counters, room restart and solo isolation.');
+console.log('Socket client passed: full-room retry/admission, 20 Hz sends, no reconnect teleport, reset races, fresh correction counters, room restart and solo isolation.');

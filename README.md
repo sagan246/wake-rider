@@ -69,7 +69,7 @@ used to prepare the hosted browser version.
 
 ## Map selection
 
-The shared lake automatically joins one public room for up to 12 boats. Each browser
+The shared lake automatically joins one public room for up to 16 boats. Each browser
 tab receives an independent temporary session, name and color. Players appear
 in the game and the lake chart. The transparent minimap defaults on and
 follows your boat in a north-up, 1 km-wide view. Colored edge arrows point to

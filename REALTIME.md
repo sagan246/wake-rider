@@ -61,8 +61,12 @@ These paths are ignored. The public Worker address is configuration, not a secre
 
 - Human browsers send poses at 20 Hz and simulate their own boat/tube locally.
   The actor broadcasts snapshots at 20 Hz and pushes collision corrections.
-- Anonymous random session IDs plus ownership tokens reserve up to 12 boats.
+- Anonymous random session IDs plus ownership tokens reserve up to 16 boats.
   Tokens travel in message bodies over TLS, never in URLs or peer snapshots.
+- Up to three bots share that capacity and yield their slots to joining humans.
+  A full human room returns `room_full`; clients keep the full notice visible
+  while automatically retrying. There is no ordered waiting queue. A network
+  failure replaces the notice, and the three-minute inactivity deadline still applies.
 - Each socket receives its own collision acknowledgment and wake cursor. An
   initial join/reset history must be acknowledged before regular broadcasts
   resume, preventing slow connections from repeatedly queueing that history.
@@ -87,6 +91,7 @@ service until the daily reset; paid Workers usage is optional and billed under
 ```sh
 pnpm run test:realtime
 node tests/realtime-live.mjs
+node tests/realtime-capacity.mjs
 ```
 
 The first command tests transactional rejection, ownership, timed bots,
@@ -95,3 +100,7 @@ isolation. The live check requires Wrangler dev to be running; it connects two
 real WebSocket clients and an HTTP client, checks stream frequency, bots,
 reconnection and reset. Continue running the physics and multiplayer suites
 when changing the shared model.
+
+The capacity check fills the local Wrangler room with 16 human clients, verifies
+that they displace bots, and confirms the next client waits with a clear full
+notice before automatically joining a freed slot. It never targets production.

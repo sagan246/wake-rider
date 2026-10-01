@@ -11,7 +11,7 @@ import { SHARED_LAKE_RULES } from '../simulation/defaults.js';
 
 const DB=createLocalD1();
 for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())DB.raw.exec(await readFile(`drizzle/${file}`,'utf8'));
-const sessions=Array.from({length:13},(_,i)=>({id:`test-player-${String(i).padStart(8,'0')}`,token:`test-secret-${String(i).padStart(32,'0')}`,physicsVersion:SHARED_LAKE_RULES.version}));
+const sessions=Array.from({length:MAX_PLAYERS+1},(_,i)=>({id:`test-player-${String(i).padStart(8,'0')}`,token:`test-secret-${String(i).padStart(32,'0')}`,physicsVersion:SHARED_LAKE_RULES.version}));
 async function post(input,origin='https://game.test'){
   const response=await handleLake(new Request('https://game.test/api/lake',{method:'POST',headers:{'Content-Type':'application/json','Origin':origin},body:JSON.stringify(input)}),DB);
   return {status:response.status,data:await response.json()};
@@ -21,27 +21,32 @@ async function join(session){
   throw new Error('Concurrent join did not settle');
 }
 assert.equal((await post({...sessions[0],physicsVersion:undefined,action:'join'})).status,426,'Older games must refresh before joining with tunable physics');
-const joined=await Promise.all(sessions.slice(0,12).map(join));
+const joined=await Promise.all(sessions.slice(0,MAX_PLAYERS).map(join));
 assert.ok(joined.every(r=>r.status===200),'Concurrent joins succeed without lost room updates');
 const latest=await join(sessions[0]);assert.equal(latest.data.players.length,MAX_PLAYERS);
-assert.equal(new Set(latest.data.players.map(p=>`${p.boat.x},${p.boat.y}`)).size,12);
+assert.equal(new Set(latest.data.players.map(p=>`${p.boat.x},${p.boat.y}`)).size,MAX_PLAYERS);
+assert.equal(new Set(latest.data.players.map(p=>p.color)).size,MAX_PLAYERS,'Every boat has its own color at full capacity');
+assert.equal(new Set(latest.data.players.map(p=>p.name)).size,MAX_PLAYERS,'Default skipper names remain unique');
 for(const p of latest.data.players){assert.ok(hasWaterClearance(lake,p.boat.x,p.boat.y,5/M));assert.ok(hasWaterClearance(lake,p.tube.x,p.tube.y,3/M));}
 for(const p of latest.data.players){
-  assert.ok(Math.hypot(p.boat.x-lake.spawn.x,p.boat.y-lake.spawn.y)<85/M,'All 12 players start together in the main basin');
+  assert.ok(Math.hypot(p.boat.x-lake.spawn.x,p.boat.y-lake.spawn.y)<85/M,'All players start together in the main basin');
   for(let t=0;t<=1;t+=.05){
     assert.ok(hasWaterClearance(lake,p.boat.x+(p.tube.x-p.boat.x)*t,p.boat.y+(p.tube.y-p.boat.y)*t,100/M),
       'The new launch keeps each full tow corridor well away from the banks');
   }
 }
 for(const a of latest.data.players)for(const b of latest.data.players)if(a.id!==b.id)assert.ok(Math.hypot(a.boat.x-b.boat.x,a.boat.y-b.boat.y)>10/M);
-assert.equal((await join(sessions[12])).status,409,'Room capacity is enforced');
+const full=await join(sessions[MAX_PLAYERS]);
+assert.equal(full.status,409,'Room capacity is enforced');
+assert.equal(full.data.code,'room_full','HTTP fallback preserves the distinct full-room reason');
+assert.match(full.data.error,new RegExp(`${MAX_PLAYERS}/${MAX_PLAYERS}`));
 assert.equal((await post({...sessions[0],token:sessions[1].token,action:'sync',seq:1})).status,403);
 assert.equal((await post({...sessions[0],action:'join'},'https://elsewhere.test')).status,403);
 const before=latest.data.self.spawn;
 assert.deepEqual((await join(sessions[0])).data.self.spawn,before,'Retrying join keeps its reservation');
 await post({...sessions[1],action:'leave'});
 assert.equal((await join(sessions[1])).status,410,'A delayed join cannot resurrect a session after leaving');
-assert.equal((await join(sessions[12])).status,200);
+assert.equal((await join(sessions[MAX_PLAYERS])).status,200);
 const reset=await post({...sessions[0],action:'reset',seq:3,length:1,beam:99999,ropeLength:99999});
 assert.equal(reset.status,200);
 const fixedBoat=reset.data.players.find(p=>p.id===sessions[0].id);
@@ -137,4 +142,4 @@ while(!finishReset)await new Promise(r=>setTimeout(r,20));
 resetClient.reset();finishReset();await new Promise(r=>setTimeout(r,20));assert.equal(resetClient.ready,false,'Older response cannot release a newer reset');
 await new Promise(r=>setTimeout(r,250));resetClient.leave();assert.ok(resetRequests>=2);
 DB.raw.close();
-console.log('Multiplayer checks passed: 12 concurrent joins, safe/reset reservations, auth, collision acknowledgments, expiry, and solo isolation.');
+console.log(`Multiplayer checks passed: ${MAX_PLAYERS} concurrent joins, distinct colors, full-room reason, safe/reset reservations, auth, collision acknowledgments, expiry, and solo isolation.`);

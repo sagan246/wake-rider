@@ -7,10 +7,11 @@ import { tubeContactResponse, tubeTubeContactResponse } from './tube-contacts.js
 import { boatContactResponse } from './boat-contacts.js';
 import { startBoatBump } from '../physics/boat-bump.js';
 import { IDLE_MS, idleResult } from './inactivity.js';
+import { MAX_PLAYERS } from './room-limits.js';
 
-export const MAX_PLAYERS = 12;
+export { MAX_PLAYERS };
 export const STALE_MS = 15000;
-const COLORS = ['#62dcff','#ff85ba','#a9e76d','#b9a0ff','#ffcb62','#7ce4bd','#ff9770','#88aaff','#e6dc7b','#ed99f1','#a5d1df','#cdb496'];
+const COLORS = ['#62dcff','#ff85ba','#a9e76d','#b9a0ff','#ffcb62','#7ce4bd','#ff9770','#88aaff','#e6dc7b','#ed99f1','#a5d1df','#cdb496','#f56b64','#36bd9b','#e8eff5','#e7a14e'];
 const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
 const finite = (n,fallback,min,max) => Number.isFinite(n) ? clamp(n,min,max) : fallback;
 const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
@@ -200,7 +201,9 @@ export function applyRoomAction(room,input,tokenHash,now) {
         const bot=Object.values(room.players).find(q=>q.isBot);
         if(bot)delete room.players[bot.id];
       }
-      if(Object.keys(room.players).length>=MAX_PLAYERS)throw roomError(409,'The lake is full (12 players). Waiting for a space…');
+      if(Object.keys(room.players).length>=MAX_PLAYERS)throw Object.assign(
+        roomError(409,`Lake full (${MAX_PLAYERS}/${MAX_PLAYERS} players). Waiting for a spot — retrying automatically…`),
+        {code:'room_full'});
       const used=new Set(Object.values(room.players).map(p=>p.color));
       const color=COLORS.find(c=>!used.has(c))||COLORS[0];
       room.wakeSourceSeq=(room.wakeSourceSeq||0)+1;

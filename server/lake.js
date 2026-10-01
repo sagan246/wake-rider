@@ -28,6 +28,7 @@ export async function handleLake(request,db) {
     return json({error:'The lake is busy. Reconnecting…'},503);
   }catch(error){
     if(!error.status)console.error('Lake synchronization failed:',error.message);
-    return json({error:error.status?error.message:'The shared lake is temporarily unavailable. Reconnecting…'},error.status||503);
+    return json({error:error.status?error.message:'The shared lake is temporarily unavailable. Reconnecting…',
+      ...(error.code?{code:error.code}:{})},error.status||503);
   }
 }

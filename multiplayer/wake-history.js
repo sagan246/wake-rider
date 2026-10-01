@@ -2,9 +2,10 @@ import { SHARED_LAKE_RULES } from '../simulation/defaults.js';
 import { MAX_WAKE_SAMPLES, MAX_WAKE_SAMPLE_AGE_MS, wakePose } from '../simulation/wake-protocol.js';
 import { OSWEGO_MAP as lake, METERS_PER_UNIT as M } from '../maps/catalog.js';
 import { hasWaterClearance } from '../physics/shore.js';
+import { MAX_PLAYERS } from './room-limits.js';
 
 export const WAKE_HISTORY_MS=SHARED_LAKE_RULES.wakeLife*1000;
-export const MAX_WAKE_EVENTS=12*SHARED_LAKE_RULES.wakeLife*10;
+export const MAX_WAKE_EVENTS=MAX_PLAYERS*SHARED_LAKE_RULES.wakeLife*10;
 const round=(n,scale)=>Math.round(n*scale)/scale;
 
 export function recordWakeSamples(room,p,samples,now){
