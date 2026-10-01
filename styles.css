@@ -192,7 +192,7 @@ dialog dd { margin: 3px 0 0; font-weight: 700; }
 .chart-legend span { display:flex; align-items:center; gap:7px; }
 .chart-legend i { width:7px; height:7px; border-radius:50%; }
 #online-notice { position:absolute; z-index:6; top:210px; left:50%; transform:translateX(-50%); max-width:calc(100% - 40px); padding:10px 15px; border:1px solid #94cdb866; border-radius:10px; color:#e5eedc; background:#082f3be8; font:12px system-ui; text-align:center; pointer-events:none; }
-#online-notice[hidden],#player-minimap-wrap[hidden],#shared-lake-settings[hidden] { display:none; }
+#online-notice[hidden],#player-minimap-wrap[hidden],#shared-lake-settings[hidden],#manual-bots-control[hidden] { display:none; }
 #online-status { color:#8ee2d2; font-size:13px; margin:0 0 14px; }
 #player-name { display:block; box-sizing:border-box; width:100%; padding:10px; margin:8px 0 14px; color:#ebedda; background:#0b3540; border:1px solid #749c9b66; border-radius:7px; font:14px system-ui; }
 .player-map-option { display:flex!important; align-items:center; gap:9px; margin:12px 0; font-size:13px; }

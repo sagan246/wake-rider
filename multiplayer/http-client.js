@@ -24,7 +24,7 @@ export function createLakeClient({read,onSpawn,onCorrection,onStatus,onWakes,onI
   async function poll(run){
     if(run!==generation||!session||checkIdle())return;
     const started=clock(),state=read(),action=!joined?'join':resetWanted?'reset':'sync',sentReset=resetRevision;
-    const sent={...session,action,physicsVersion:SHARED_LAKE_RULES.version,seq:++seq,ack,wakeSince:wakeCursor,name:state.name,botCount:state.botCount||0,paused:state.paused,activitySeq:state.activitySeq,boat:pose(state.boat),tube:pose(state.tube),wakeSamples:state.wakeSamples||[]};
+    const sent={...session,action,physicsVersion:SHARED_LAKE_RULES.version,seq:++seq,ack,wakeSince:wakeCursor,name:state.name,botCount:state.botCount||0,fillBotsRequest:state.fillBotsRequest,paused:state.paused,activitySeq:state.activitySeq,boat:pose(state.boat),tube:pose(state.tube),wakeSamples:state.wakeSamples||[]};
     const controller=new AbortController();abort=controller;const timeout=setTimeout(()=>controller.abort(),4500);
     let delay=200;
     try{

@@ -263,6 +263,9 @@ Shared Lake uses a hybrid client/server model:
   of bot slot number. Steering changes gradually and the driver slows when
   its tube swings far sideways. Collision momentum and tow constraints remain
   active; this navigation does not add the human rider's complete jump model.
+  Optional room-wide automatic filling keeps the total at 16 boats, with humans
+  replacing filler bots. Manual bots remain owned by their requesting session;
+  automatic fillers remain while any human is present and filling is enabled.
 
 The actor keeps active play in memory. A server restart starts a new room epoch;
 clients clear wake/collision counters and relaunch safely. A reconnect within the

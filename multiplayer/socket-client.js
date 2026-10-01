@@ -20,7 +20,7 @@ export function createSocketClient({ url, read, onSpawn, onCorrection, onStatus,
     const state = read(), sentAt = clock(), requestSeq = ++seq;
     const message = { ...session, action, seq: requestSeq, ack, frameAck, wakeSince: wakeCursor,
       physicsVersion: SHARED_LAKE_RULES.version, resetRevision, sentAt,
-      name: state.name, botCount: state.botCount || 0, paused: state.paused, activitySeq: state.activitySeq,
+      name: state.name, botCount: state.botCount || 0, fillBotsRequest: state.fillBotsRequest, paused: state.paused, activitySeq: state.activitySeq,
       boat: pose(state.boat), tube: pose(state.tube), wakeSamples: state.wakeSamples || [] };
     if (action === 'join' || action === 'reset') pending = { action, seq: requestSeq, resetRevision, sentAt };
     try { socket.send(JSON.stringify(message)); return true; } catch { socket.close(); return false; }

@@ -119,6 +119,14 @@ export function startCanvas2DApp() {
   const hudMap=document.querySelector('#player-minimap'),hudMapWrap=document.querySelector('#player-minimap-wrap'),mapToggle=document.querySelector('#show-player-minimap');
   const playerName=document.querySelector('#player-name'),onlineStatus=document.querySelector('#online-status'),onlineNotice=document.querySelector('#online-notice');
   const testBots=document.querySelector('#test-bots'),testBotsStatus=document.querySelector('#test-bots-status');
+  const fillEmptySeats=document.querySelector('#fill-empty-seats'),fillBotsStatus=document.querySelector('#fill-bots-status');
+  const botFillHelp='Shared setting · keeps 16 boats on the lake while people are playing. Real players replace bots as they join.';
+  let botFillState=null,pendingBotFill=null;
+  fillEmptySeats.addEventListener('change',()=>{
+    if(!botFillState||pendingBotFill||!multiplayer.ready)return;
+    pendingBotFill={...botFillState,enabled:fillEmptySeats.checked};
+    fillEmptySeats.disabled=true;fillBotsStatus.textContent='Updating the shared lake…';
+  });
   testBots.value='0'; // Deliberately opt in again on each visit.
   testBots.addEventListener('change',()=>{testBotsStatus.textContent='Updating your bots…';});
   mapToggle.checked=true;
@@ -132,7 +140,7 @@ export function startCanvas2DApp() {
   mapToggle.addEventListener('change',()=>{updateMinimapVisibility();try{localStorage.setItem('wake-rider-player-minimap',String(mapToggle.checked));}catch{}});
   playerName.addEventListener('change',()=>{try{localStorage.setItem('wake-rider-player-name',playerName.value);}catch{}});
   multiplayer=createLakeClient({
-    read:()=>({boat,tube,wakeSamples:simulator.getWakeSamples(),name:playerName.value,botCount:Number(testBots.value),paused:appSuspended||mapDialog.open||replay.active,
+    read:()=>({boat,tube,wakeSamples:simulator.getWakeSamples(),name:playerName.value,botCount:Number(testBots.value),fillBotsRequest:pendingBotFill,paused:appSuspended||mapDialog.open||replay.active,
       activitySeq:activity.sample(controls.hasHeldInput(),appSuspended||mapDialog.open||replay.active)}),
     onSpawn:spawn=>{
       reset(spawn);
@@ -147,6 +155,21 @@ export function startCanvas2DApp() {
       onlineStatus.textContent=message;onlineNotice.textContent=message;
       onlineNotice.hidden=activeMap.id!=='oswego'||ready;
       if(!ready){controls.resetAll();setCruiseEnabled(false);}
+      if(self?.botFill){
+        botFillState=self.botFill;
+        if(pendingBotFill&&(botFillState.epoch!==pendingBotFill.epoch||botFillState.revision!==pendingBotFill.revision))pendingBotFill=null;
+        fillEmptySeats.checked=pendingBotFill?pendingBotFill.enabled:botFillState.enabled;
+        fillBotsStatus.textContent=pendingBotFill?'Updating the shared lake…':botFillState.enabled
+          ?`Automatic fill is on · ${count}/16 boats. People replace bots as they join.`
+          :botFillHelp;
+      }else if(!self){
+        // A new/ended session must not replay an unconfirmed menu change.
+        // Ordinary transport reconnects retain self and can safely retry it.
+        botFillState=null;pendingBotFill=null;fillEmptySeats.checked=false;
+        fillBotsStatus.textContent=botFillHelp;
+      }
+      fillEmptySeats.disabled=!ready||!botFillState||!!pendingBotFill;
+      document.querySelector('#manual-bots-control').hidden=fillEmptySeats.checked;
       if(self&&self.botCount===Number(testBots.value)){
         testBotsStatus.textContent=self.botCount?`${self.activeBots} of ${self.botCount} bots cruising${self.activeBots<self.botCount?' · waiting for space':''}.`:'Your bots are off.';
       }
@@ -171,6 +194,7 @@ export function startCanvas2DApp() {
   }
   mapSelect.addEventListener('change',()=>{
     testBots.value='0';testBotsStatus.textContent='Your bots are off.';
+    botFillState=null;pendingBotFill=null;fillEmptySeats.checked=false;fillEmptySeats.disabled=true;
     if(activeMap.id==='open')soloPhysics={config:{...CONFIG},rider:{...rider},riderProfile:riderProfileControl.value,maxBoatSpeedMph,cruiseSpeedMph};
     activeMap=getMap(mapSelect.value);mapOverlay=createMapOverlay(activeMap);
     lakeSpawnAssigned=false;

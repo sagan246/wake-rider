@@ -13,7 +13,12 @@ const server=createServer(async(req,res)=>{
   try{
     const chunks=[];for await(const chunk of req){chunks.push(chunk);if(chunks.reduce((n,c)=>n+c.length,0)>8192){res.writeHead(413);res.end();return;}}
     const body=Buffer.concat(chunks),request=new Request(`http://${req.headers.host}${req.url}`,{method:req.method,headers:req.headers,...(body.length?{body}: {})});
-    const response=await worker.fetch(request,{DB,LAKE_REALTIME_URL:process.env.LAKE_REALTIME_URL});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+    const response=await worker.fetch(request,{DB,LAKE_REALTIME_URL:process.env.LAKE_REALTIME_URL});
+    const headers=new Headers(response.headers);
+    // Node fetch decodes forwarded realtime responses; do not label those
+    // decoded bytes as gzip or keep the compressed Content-Length.
+    headers.delete('Content-Encoding');headers.delete('Content-Length');
+    res.writeHead(response.status,Object.fromEntries(headers));res.end(Buffer.from(await response.arrayBuffer()));
   }catch(error){console.error(error);res.writeHead(500);res.end('Local server error');}
 });
 server.listen(8783,'127.0.0.1',()=>console.log('Shared-lake preview: http://127.0.0.1:8783/?map=oswego'));

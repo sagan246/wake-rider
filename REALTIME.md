@@ -3,7 +3,9 @@
 Shared sessions expire after three minutes without deliberate interaction.
 Clients send a monotonic activity counter; the room timestamps advances using
 its own clock, separately from connection heartbeats. The room removes an idle
-owner and their bots atomically. Both transports treat the idle reason as
+owner and their manual bots atomically. Automatic fillers replace their seats
+while another human remains; the final human's removal clears all bots and filling.
+Both transports treat the idle reason as
 terminal, and WebSockets also use close code 4008. A client deadline survives
 reconnects and tab suspension. Reset creates a fresh session after inactivity;
 drifting or a latched throttle cannot silently keep the old one alive.
@@ -64,6 +66,12 @@ These paths are ignored. The public Worker address is configuration, not a secre
 - Anonymous random session IDs plus ownership tokens reserve up to 16 boats.
   Tokens travel in message bodies over TLS, never in URLs or peer snapshots.
 - Up to 15 bots share that capacity and yield their slots to joining humans.
+  The shared **Fill empty seats with bots** toggle adds room-owned fillers after
+  manual requests. Human joins evict fillers first. Settings use explicit sync
+  commands with a room-specific epoch and expected revision; stale/repeated
+  commands never overwrite a newer setting. The revision is advanced even for
+  an accepted same-value click. Fill mode survives its enabler leaving, but is
+  disabled and all bots removed when the last human leaves or expires.
   A full human room returns `room_full`; clients keep the full notice visible
   while automatically retrying. There is no ordered waiting queue. A network
   failure replaces the notice, and the three-minute inactivity deadline still applies.
@@ -75,7 +83,7 @@ These paths are ignored. The public Worker address is configuration, not a secre
 - Bots advance from an independent timer using their existing 100 ms step.
 - Unexpected disconnects retain reservations for 15 seconds. Reconnects resume
   the existing boat; expiry or an actor restart creates a fresh safe launch.
-  Explicitly leaving removes the player and its optional bots.
+  Explicitly leaving removes the player and its manually requested bots.
 - All HTTP compatibility traffic is forwarded to this same room, so old tabs
   and browsers without WebSockets do not end up in a separate lake.
 - Open Water remains entirely solo. Rendering remains the existing 2.5D Canvas

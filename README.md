@@ -89,11 +89,15 @@ shared lake. Driving keys, held touch controls, gamepad input and UI interaction
 count as activity; a latched throttle, drifting or connection heartbeats do not.
 Press **Reset** to rejoin after inactivity. Solo Open Water has no idle timeout.
 
-Choose **PHYSICS → Lake map → Test bots** to add up to 15 bots to the shared
-lake. Their starts are spread around the main basin, and they make alternating
+Choose **PHYSICS → Lake map → Fill empty seats with bots** to keep the lake at
+16 boats while people are playing. This is a shared setting: humans replace bots
+when they join, and empty spaces refill when people leave. It stays on if the
+person who enabled it leaves, and switches off when the last human leaves.
+Turn it off to use **Your test bots** and request a manual count of 0–15 instead.
+Their starts are spread around the main basin, and they make alternating
 S-turns, sweeping turns and gentle speed changes for a livelier tube ride.
 They reduce weaving near traffic and shore. The 16-boat limit includes bots;
-real players always take their places when needed. Bots remain off by default.
+real players always take their places when needed. New empty rooms start with bots off.
 
 This is casual multiplayer: local driving and tow physics are synchronized by
 WebSockets at a target 20 updates per second; remote poses are interpolated with

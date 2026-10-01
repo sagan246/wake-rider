@@ -131,24 +131,49 @@ export function resolveTubeContacts(room,p,previousBoat,previousTube,now){
   }
 }
 const requestedBots=value=>Number.isSafeInteger(value)?clamp(value,0,MAX_BOTS):0;
+function clearEmptyRoomBots(room){
+  if(Object.values(room.players).some(p=>!p.isBot))return false;
+  for(const [id,p] of Object.entries(room.players))if(p.isBot)delete room.players[id];
+  if(room.botFill.enabled)room.botFill={...room.botFill,enabled:false,revision:room.botFill.revision+1};
+  return true;
+}
+function addBot(room,now,id,slot,ownerId=null){
+  const used=new Set(Object.values(room.players).map(q=>q.color));
+  const color=COLORS.find(c=>!used.has(c))||COLORS[0];
+  const bot={id,isBot:true,fillBot:ownerId===null,ownerId,botSlot:slot,name:`Bot ${COLORS.indexOf(color)+1}`,color,physicsVersion:SHARED_LAKE_RULES.version,eventSeq:0};
+  configure(bot,{});
+  try{chooseSpawn(room.players,bot,now,BOT_PADS);}catch(error){if(error.status===409)return false;throw error;}
+  room.players[id]=bot;return true;
+}
 function reconcileBots(room,now){
-  // Bots belong to the session that requested them, and never take a human's
-  // last seat. Bound the whole lake to MAX_BOTS, even if many clients request them.
+  if(clearEmptyRoomBots(room))return;
+  // Manual bots belong to their requester; automatic fillers belong to the
+  // room and can stay after the person who enabled filling leaves.
   for(const [id,bot] of Object.entries(room.players))if(bot.isBot){
+    if(bot.fillBot){if(!room.botFill.enabled)delete room.players[id];continue;}
     const owner=room.players[bot.ownerId];
     if(!owner||owner.isBot||bot.botSlot>owner.botCount)delete room.players[id];
   }
   let total=Object.values(room.players).filter(q=>q.isBot).length;
   for(const owner of Object.values(room.players).filter(q=>!q.isBot)){
-    for(let slot=1;slot<=owner.botCount&&total<MAX_BOTS&&Object.keys(room.players).length<MAX_PLAYERS;slot++){
+    for(let slot=1;slot<=owner.botCount;slot++){
       const id=`bot-${owner.id}-${slot}`;
       if(room.players[id])continue;
-      const used=new Set(Object.values(room.players).map(q=>q.color));
-      const color=COLORS.find(c=>!used.has(c))||COLORS[0];
-      const bot={id,isBot:true,ownerId:owner.id,botSlot:slot,name:`Bot ${COLORS.indexOf(color)+1}`,color,physicsVersion:SHARED_LAKE_RULES.version,eventSeq:0};
-      configure(bot,{});
-      try{chooseSpawn(room.players,bot,now,BOT_PADS);}catch(error){if(error.status===409)break;throw error;}
-      room.players[id]=bot;total++;
+      if(total>=MAX_BOTS||Object.keys(room.players).length>=MAX_PLAYERS){
+        const filler=Object.values(room.players).find(q=>q.fillBot);
+        if(!filler)break;
+        delete room.players[filler.id];total--;
+      }
+      if(!addBot(room,now,id,slot,owner.id))break;
+      total++;
+    }
+  }
+  if(room.botFill.enabled){
+    for(let slot=1;slot<=MAX_BOTS&&total<MAX_BOTS&&Object.keys(room.players).length<MAX_PLAYERS;slot++){
+      const id=`fill-bot-${slot}`;
+      if(room.players[id])continue;
+      if(!addBot(room,now,id,slot))break;
+      total++;
     }
   }
 }
@@ -171,6 +196,7 @@ function advanceBots(room,now){
 }
 function pruneRoom(room,now) {
   room.players ||= {};room.contacts ||= {};room.departed ||= {};
+  room.botFill ||= {enabled:false,revision:0,epoch:crypto.randomUUID()};
   room.idleDeparted ||= {};
   pruneWakeHistory(room,now);
   for(const [id,at] of Object.entries(room.idleDeparted))if(now-at>10*60*1000)delete room.idleDeparted[id];
@@ -179,7 +205,8 @@ function pruneRoom(room,now) {
   }
   for(const [id,at] of Object.entries(room.departed))if(now-at>60000)delete room.departed[id];
   for(const [id,p] of Object.entries(room.players))if((!p.isBot&&now-p.updatedAt>STALE_MS)||p.physicsVersion!==SHARED_LAKE_RULES.version)delete room.players[id];
-  for(const [id,p] of Object.entries(room.players))if(p.isBot&&!room.players[p.ownerId])delete room.players[id];
+  for(const [id,p] of Object.entries(room.players))if(p.isBot&&!p.fillBot&&!room.players[p.ownerId])delete room.players[id];
+  clearEmptyRoomBots(room);
   for(const [key,at] of Object.entries(room.contacts))if(now-at>3000)delete room.contacts[key];
 }
 // The live room has its own clock; bots keep moving between incoming packets.
@@ -198,7 +225,8 @@ export function applyRoomAction(room,input,tokenHash,now) {
     if(room.departed[input.id])throw roomError(410,'This lake session has ended.');
     if(!p){
       if(Object.keys(room.players).length>=MAX_PLAYERS){
-        const bot=Object.values(room.players).find(q=>q.isBot);
+        const fleet=Object.values(room.players);
+        const bot=fleet.find(q=>q.fillBot)||fleet.find(q=>q.isBot);
         if(bot)delete room.players[bot.id];
       }
       if(Object.keys(room.players).length>=MAX_PLAYERS)throw Object.assign(
@@ -242,6 +270,13 @@ export function applyRoomAction(room,input,tokenHash,now) {
           resolveTubeContacts(room,p,previous,previousTube,now);
         }
       }else throw roomError(400,'Unknown lake action.');
+      // Only explicit, current-room clicks change this shared setting. Normal
+      // heartbeats, lost-reply retries and stale tabs cannot undo another click.
+      const change=input.fillBotsRequest;
+      if(input.action==='sync'&&typeof change?.enabled==='boolean'
+        &&change.epoch===room.botFill.epoch&&change.revision===room.botFill.revision){
+        room.botFill={...room.botFill,enabled:change.enabled,revision:room.botFill.revision+1};
+      }
     }
   }
   if(Number.isSafeInteger(input.activitySeq)&&input.activitySeq>p.activitySeq){
@@ -252,5 +287,5 @@ export function applyRoomAction(room,input,tokenHash,now) {
   return {...snapshot(room,p,now),...wakeSnapshot(room,input.action==='join'||input.action==='reset'?0:input.wakeSince)};
 }
 export function snapshot(room,p,now) {
-  return {serverTime:now,capacity:MAX_PLAYERS,self:{id:p.id,name:p.name,color:p.color,spawn:p.spawn,correction:p.correction,lastReset:p.lastReset,wakeSource:p.wakeSource,wakeAck:p.wakeAck||0,botCount:p.botCount||0,activeBots:Object.values(room.players).filter(q=>q.isBot&&q.ownerId===p.id).length},players:Object.values(room.players).map(q=>({id:q.id,name:q.name,color:q.color,isBot:!!q.isBot,boat:q.boat,tube:q.tube,length:q.length,beam:q.beam,paused:q.paused,updatedAt:q.updatedAt,poseAt:q.poseAt,spawnAt:q.wakeEpochAt}))};
+  return {serverTime:now,capacity:MAX_PLAYERS,self:{id:p.id,name:p.name,color:p.color,spawn:p.spawn,correction:p.correction,lastReset:p.lastReset,wakeSource:p.wakeSource,wakeAck:p.wakeAck||0,botCount:p.botCount||0,botFill:{...room.botFill},activeBots:Object.values(room.players).filter(q=>q.isBot&&q.ownerId===p.id).length},players:Object.values(room.players).map(q=>({id:q.id,name:q.name,color:q.color,isBot:!!q.isBot,boat:q.boat,tube:q.tube,length:q.length,beam:q.beam,paused:q.paused,updatedAt:q.updatedAt,poseAt:q.poseAt,spawnAt:q.wakeEpochAt}))};
 }
