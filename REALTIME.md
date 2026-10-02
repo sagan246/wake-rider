@@ -78,6 +78,11 @@ These paths are ignored. The public Worker address is configuration, not a secre
 - Each socket receives its own collision acknowledgment and wake cursor. An
   initial join/reset history must be acknowledged before regular broadcasts
   resume, preventing slow connections from repeatedly queueing that history.
+- Wake uploads use a server-time estimate anchored to monotonic wall time,
+  separate from wave simulation steps. A prediction slightly ahead of this
+  estimate stays visible and waits for a later upload, keeping its timestamp
+  and emission spacing intact. Strict future-sample validation stays enabled;
+  frame timing must never cause a valid wake to be rejected and disappear.
 - The actor validates and atomically commits room actions. Invalid input never
   leaves a partially updated player behind. Messages and update rates are bounded.
 - Bots advance from an independent timer using their existing 100 ms step.

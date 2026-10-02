@@ -5,7 +5,7 @@ import { MAX_WAKE_SAMPLES, MAX_WAKE_SAMPLE_AGE_MS, wakePose } from './wake-proto
 // Predictions and confirmed packets share the same physical water. Reconcile
 // by exact emitter/sequence IDs, never by approximate position or arrival time.
 export function createSharedWakeField(wakes,{clock=()=>performance.now()}={}){
-  let cursor=0,serverClock=null;
+  let cursor=0,serverClock=null,serverOffset=null;
   const pending=new Map();
   function predict(boat,seq){
     const pose=wakePose(boat);
@@ -17,11 +17,16 @@ export function createSharedWakeField(wakes,{clock=()=>performance.now()}={}){
   }
   function samples(){
     const now=clock(),result=[];
+    const uploadTime=serverOffset===null?null:Math.floor(now+serverOffset);
     for(const [seq,p] of pending){
       const age=Math.max(0,Math.round(now-p.at));
       // Timestamp the emission on the shared clock, not when its upload
       // arrives. Otherwise a slow upload would make confirmed waves younger.
-      if(age<=MAX_WAKE_SAMPLE_AGE_MS&&p.serverAt!==null)result.push([seq,p.serverAt,p.x,p.y,p.angle,p.speed]);
+      // A snapshot between animation frames can put the wave simulation a few
+      // milliseconds ahead. Keep that prediction and its original timestamp
+      // until wall time catches up; sending it early gets it rejected, while
+      // restamping it can violate the server's minimum emission spacing.
+      if(age<=MAX_WAKE_SAMPLE_AGE_MS&&p.serverAt!==null&&uploadTime!==null&&p.serverAt<=uploadTime)result.push([seq,p.serverAt,p.x,p.y,p.angle,p.speed]);
     }
     return result;
   }
@@ -31,6 +36,10 @@ export function createSharedWakeField(wakes,{clock=()=>performance.now()}={}){
   }
   function receive(events,serverTime,{source,ack=0}={}){
     if(!Number.isFinite(serverTime))return;
+    // Advance upload eligibility with monotonic wall time, never physics dt.
+    // A delayed receipt gives a conservative estimate; older receipts cannot
+    // rewind it. Do not guess one-way latency or relax server validation.
+    serverOffset=Math.max(serverOffset??-Infinity,serverTime-clock());
     const now=serverTime/1000;
     if(serverClock===null)serverClock=now;
     else if(now>serverClock)advance(now-serverClock);

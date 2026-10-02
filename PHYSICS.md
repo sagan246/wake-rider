@@ -252,6 +252,10 @@ Shared Lake uses a hybrid client/server model:
 - [simulation/shared-wakes.js](simulation/shared-wakes.js) predicts the local
   boat's wake immediately. Server-timed emission events replace matching
   predictions by IDs so confirmation does not apply the same wave twice.
+  A separate clock anchored to server receipts gates uploads. Predictions a
+  fraction of a frame ahead remain visible and queued until that clock catches
+  up, preserving their timestamps and spacing instead of losing them to the
+  server's future-sample rejection. This works independently of display refresh rate.
   Joining players receive recent wake history.
 - [multiplayer/bots.js](multiplayer/bots.js) uses simplified server navigation
   and towing in 100 ms steps, driven by the room's independent timer. Bots share wakes
